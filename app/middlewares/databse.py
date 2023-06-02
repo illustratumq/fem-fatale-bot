@@ -5,7 +5,7 @@ from aiogram.types.base import TelegramObject
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
 
-from app.database.services.repos import DatabaseRepo
+from app.database.services.repos import *
 
 
 class DatabaseMiddleware(LifetimeControllerMiddleware):
@@ -18,6 +18,12 @@ class DatabaseMiddleware(LifetimeControllerMiddleware):
         session: AsyncSession = self.session_pool()
         data['session'] = session
         data['db'] = DatabaseRepo(session)
+        data['user_db'] = UserRepo(session)
+        data['partner_db'] = PartnerRepo(session)
+        data['article_db'] = ArticleRepo(session)
+        data['chat_db'] = ChatRepo(session)
+        data['event_db'] = EventRepo(session)
+        data['media_db'] = MediaRepo(session)
 
     async def post_process(self, obj: TelegramObject, data: dict, *args: Any):
         if session := data.get('session', None):

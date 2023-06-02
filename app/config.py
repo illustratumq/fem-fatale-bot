@@ -42,6 +42,8 @@ class RedisConfig:
 class Miscellaneous:
     log_level: str
     timezone: str
+    media_channel_id: str
+    event_channel_id: str
 
 
 @dataclass
@@ -75,6 +77,8 @@ class Config:
             ),
             misc=Miscellaneous(
                 log_level=env.str('LOG_LEVEL', logging.INFO),
-                timezone=env.str('TIMEZONE', 'Europe/Kiev')
+                timezone=env.str('TIMEZONE', 'Europe/Kiev'),
+                media_channel_id=env.str('MEDIA_CHANNEL_ID'),
+                event_channel_id=env.str('EVENT_CHANNEL_ID')
             )
         )

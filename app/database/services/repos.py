@@ -1,8 +1,11 @@
+import random
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
 
 from app.database.models import *
 from app.database.services.db_ctx import BaseRepo
+from app.database.services.enums import UserStatusEnum
 
 
 class UserRepo(BaseRepo[User]):
@@ -22,6 +25,14 @@ class UserRepo(BaseRepo[User]):
 
     async def update_user(self, user_id: int, **kwargs) -> None:
         return await self.update(self.model.user_id == user_id, **kwargs)
+
+    async def generate_user_card(self, user_id: int):
+        existing_cards = [u.card for u in await self.get_all() if u.card]
+        all_cards = set([str(i) for i in range(1, 10000)])
+        free_cards = all_cards - set(existing_cards)
+        card = random.choice(list(free_cards))
+        await self.update_user(user_id, card=str(card))
+        return card
 
     async def delete_user(self, user_id: int):
         return await self.delete(self.model.user_id == user_id)

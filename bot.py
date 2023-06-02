@@ -5,12 +5,18 @@ import betterlogging as bl
 from aiogram import Bot, Dispatcher
 from aiogram.contrib.fsm_storage.redis import RedisStorage2
 from aiogram.types import ParseMode, AllowedUpdates
+from sqlalchemy.orm import sessionmaker
 
 from app import middlewares, handlers
 from app.config import Config
+from app.database.excel.users.controller import ExcelUserController
 from app.database.services.db_engine import create_db_engine_and_session_pool
 
 log = logging.getLogger(__name__)
+
+
+async def setup_excel_data(session: sessionmaker):
+    await ExcelUserController('app/database/excel/users/users.xlsx').add_users_to_db(session)
 
 
 async def main():
@@ -33,6 +39,8 @@ async def main():
     allowed_updates = (
         AllowedUpdates.MESSAGE + AllowedUpdates.CALLBACK_QUERY
     )
+
+    # await setup_excel_data(sqlalchemy_session_pool)
 
     try:
         await dp.skip_updates()

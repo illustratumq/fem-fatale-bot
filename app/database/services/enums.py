@@ -3,6 +3,7 @@ from enum import Enum
 
 class UserStatusEnum(Enum):
     ACTIVE = 'ACTIVE'
+    INACTIVE = 'INACTIVE'
     UNAUTHORIZED = 'UNAUTHORIZED'
 
 
@@ -11,6 +12,7 @@ class UserRoleEnum(Enum):
     USER = 'USER'
     MODERATOR = 'MODERATOR'
     COMPETITION = 'COMPETITION'
+    PARTNER = 'PARTNER'
 
 
 class ArticleStatusEnum(Enum):
@@ -27,4 +29,5 @@ class EventStatusEnum(Enum):
 class EventTypeEnum(Enum):
     RESERV = 'RESERV'
     PAYOUT = 'PAYOUT'
+    AUTH = 'AUTH'
     HELP = 'HELP'
