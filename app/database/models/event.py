@@ -3,12 +3,14 @@ import os
 import sqlalchemy as sa
 from aiogram import Bot
 from aiogram.types import InputFile
+from aiogram.utils.deep_linking import get_start_link
 from aiogram.utils.markdown import hide_link
 from sqlalchemy.dialects.postgresql import ENUM
 
 from app.config import Config
 from app.database.models.base import TimedBaseModel
 from app.database.services.enums import EventStatusEnum, EventTypeEnum
+from app.keyboards.inline.admin import event_kb
 from app.misc.photo import make_event_photo
 
 
@@ -52,5 +54,7 @@ class Event(TimedBaseModel):
 
     async def make_message(self, bot: Bot, config, event_db, user, admin=None):
         await self.create_event_photo(bot, config, event_db, user, admin)
-        message = await bot.send_message(config.misc.event_channel_id, self.create_event_text())
+        reply_markup = event_kb(await get_start_link(f'event-{self.id}'))
+        message = await bot.send_message(config.misc.event_channel_id, self.create_event_text(),
+                                         reply_markup=reply_markup)
         await event_db.update_event(self.id, message_id=message.message_id)

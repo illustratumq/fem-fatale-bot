@@ -31,3 +31,8 @@ class EventTypeEnum(Enum):
     PAYOUT = 'PAYOUT'
     AUTH = 'AUTH'
     HELP = 'HELP'
+
+
+class PayoutTypeEnum(Enum):
+    MINUS = 'MINUS'
+    PLUS = 'PLUS'

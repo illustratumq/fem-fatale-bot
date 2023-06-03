@@ -24,6 +24,7 @@ class DatabaseMiddleware(LifetimeControllerMiddleware):
         data['chat_db'] = ChatRepo(session)
         data['event_db'] = EventRepo(session)
         data['media_db'] = MediaRepo(session)
+        data['payout_db'] = PayoutRepo(session)
 
     async def post_process(self, obj: TelegramObject, data: dict, *args: Any):
         if session := data.get('session', None):

@@ -121,6 +121,19 @@ class MediaRepo(BaseRepo[Media]):
         return await self.delete(self.model.id == media_id)
 
 
+class PayoutRepo(BaseRepo[Payout]):
+    model = Payout
+
+    async def get_payout(self, payout_id: int) -> Payout:
+        return await self.get_one(self.model.id == payout_id)
+
+    async def update_payout(self, payout_id: int, **kwargs) -> None:
+        return await self.update(self.model.id == payout_id, **kwargs)
+
+    async def delete_payout(self, payout_id: int):
+        return await self.delete(self.model.id == payout_id)
+
+
 class DatabaseRepo:
 
     def __init__(self, session: AsyncSession):

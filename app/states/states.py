@@ -9,3 +9,9 @@ class AuthSG(StatesGroup):
 class PartnerSG(StatesGroup):
     Categories = State()
     Pagination = State()
+
+
+class PayoutSG(StatesGroup):
+    Card = State()
+    Comment = State()
+    Confirm = State()

@@ -9,8 +9,7 @@ from app.keyboards.reply.menu import basic_kb
 from app.misc.photo import make_card_photo
 
 
-async def user_card_cmd(msg: Message, user_db: UserRepo, media_db: MediaRepo):
-    await media_db.add(files=['1', '2', '3'])
+async def user_card_cmd(msg: Message, user_db: UserRepo):
     user = await user_db.get_user(msg.from_user.id)
     if not user.is_authorized:
         text = (

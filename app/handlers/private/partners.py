@@ -51,6 +51,7 @@ async def partner_pagination_cmd(msg: Message, partner_db: PartnerRepo, media_db
         page = (page - 1) % len(partners)
     elif partner := await partner_db.get_partner_name(msg.text):
         await partner_view_cmd(msg, partner, media_db)
+        await state.update_data(partner_id=partner.id)
         return
 
     partners = partners[page]
