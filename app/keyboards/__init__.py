@@ -16,7 +16,37 @@ class Articles:
     prev: str = '◀ Попередня'
 
 
+class History:
+    next: str = 'Наступний ▶'
+    prev: str = '◀ Попередній'
+
+
+class Admin:
+    #  panel
+    cancel_chat: str = 'Завершити діалог 💬'
+    database: str = 'База даних 📗'
+    database_clients: str = 'Клієнти 👥'
+    database_partners: str = 'Партнери 🌉'
+    search: str = 'Знайти клієнта 🔍'
+    create_payout_panel: str = 'Створити платіж'
+    create_chat_panel: str = 'Створити чат з клієнтом'
+
+    #  events
+    make_done: str = 'Відмітити як виконане'
+    create_message: str = 'Відправити разове повідомлення 📧'
+    create_payout: str = 'Створити платіж'
+    create_chat: str = 'Створити чат з клієнтом 💬'
+    cancel: str = 'Відмінити'
+    plus: str = 'Нарахувати бали'
+    minus: str = 'Зняти бали'
+    skip: str = 'Пропустити'
+    done_payout: str = 'Створити платіж ✅'
+    back: str = 'Повернутись назад'
+    to_admin: str = 'В адмін панель'
+
+
 class Menu:
+    admin: str = 'В адмін панель 🖥'
     partners: str = 'Наші партнери 👜'
     card: str = 'Моя карта 🆔'
     cashback: str = 'Виплата кешбеку 💰'
@@ -38,3 +68,5 @@ class Buttons:
     back = Back()
     partners = Partners()
     articles = Articles()
+    admin = Admin()
+    history = History()

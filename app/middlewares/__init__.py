@@ -15,5 +15,5 @@ def setup(dp: Dispatcher, session_pool: sessionmaker, environments: dict):
     dp.setup_middleware(MediaMiddleware())
     dp.setup_middleware(EnvironmentMiddleware(environments))
     dp.setup_middleware(DatabaseMiddleware(session_pool))
-    dp.setup_middleware(ThrottlingMiddleware())
+    dp.setup_middleware(ThrottlingMiddleware(limit=0.01))
     log.info('Мідлварі успішно встановлені...')

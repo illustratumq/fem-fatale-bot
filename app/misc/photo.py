@@ -3,9 +3,9 @@ import os
 from PIL import Image, ImageFont, ImageDraw
 
 
-def make_event_photo(title: str, description: str, status: str, client: str):
+def make_event_photo(title: str, description: str, status: str, client: str, done: bool = False):
     file_number = len(os.listdir('app/data/')) + 1
-    logo = Image.open('app/data/event.png')
+    logo = Image.open(f'app/data/event{"_done" if done else ""}.png')
     drawer = ImageDraw.Draw(logo)
     font = ImageFont.truetype('calibri.ttf', 65)
     drawer.text((50, 120), split_string(title, n=22), fill='black', font=font, stroke_width=1)

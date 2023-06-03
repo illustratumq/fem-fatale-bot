@@ -3,6 +3,7 @@ from aiogram.dispatcher.filters import MediaGroupFilter
 from aiogram.types import Message, ContentTypes
 
 from app.database.services.repos import MediaRepo
+from app.filters import IsAdminFilter
 
 
 async def save_media_group_cmd(msg: Message, media: list[Message], media_db: MediaRepo):
@@ -26,6 +27,7 @@ async def save_photo_cmd(msg: Message, media_db: MediaRepo):
 
 def setup(dp: Dispatcher):
     dp.register_message_handler(
-        save_media_group_cmd, MediaGroupFilter(True), content_types=ContentTypes.PHOTO, state='*')
-    dp.register_message_handler(save_photo_cmd, MediaGroupFilter(False), content_types=ContentTypes.PHOTO, state='*')
+        save_media_group_cmd, IsAdminFilter(), MediaGroupFilter(True), content_types=ContentTypes.PHOTO, state='*')
+    dp.register_message_handler(
+        save_photo_cmd, IsAdminFilter(), MediaGroupFilter(False), content_types=ContentTypes.PHOTO, state='*')
 

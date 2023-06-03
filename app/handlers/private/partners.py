@@ -43,7 +43,11 @@ async def partner_pagination_cmd(msg: Message, partner_db: PartnerRepo, media_db
     city = data['city']
     page = data['page']
     category = data['category']
-    partners = chunk_list(await partner_db.get_partners_category(category, city), 6)
+    partners = await partner_db.get_partners_category(category, city)
+
+    partners.sort(key=lambda p: p.updated_at, reverse=True)
+    partners.sort(key=lambda p: p.priority if p.priority else 0, reverse=True)
+    partners = chunk_list(partners, 6)
 
     if msg.text == Buttons.partners.next:
         page = (page + 1) % len(partners)

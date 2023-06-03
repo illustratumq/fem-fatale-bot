@@ -1,6 +1,6 @@
 from aiogram import Dispatcher
 
-from app.handlers.private import start, card, partners, media, news, payout, reserv, help
+from app.handlers.private import start, card, partners, media, news, payout, reserv, help, history
 
 
 def setup(dp: Dispatcher):
@@ -12,3 +12,4 @@ def setup(dp: Dispatcher):
     media.setup(dp)
     payout.setup(dp)
     help.setup(dp)
+    history.setup(dp)

@@ -63,6 +63,7 @@ class Partner(TimeBaseModel):
         ('Казино', 'Казино'),
         ('Караоке', 'Караоке'),
         ('Готелі', 'Готелі'),
+        ('Салони краси', 'Салони краси'),
         ('Інше', 'Інше')
     )
 
@@ -75,6 +76,7 @@ class Partner(TimeBaseModel):
     phone = models.CharField(max_length=12, verbose_name='Телефон', null=True, blank=True)
     city = models.CharField(max_length=20, verbose_name='Місто', null=False, default='Київ')
     description = models.CharField(max_length=1000, verbose_name='Додаткова інформація', null=True, blank=True)
+    priority = models.IntegerField(null=True, blank=True, verbose_name='Приоритетність')
 
     def __str__(self):
         return f'№{self.id} {self.name} - {self.category}'
@@ -120,6 +122,30 @@ class User(TimeBaseModel):
     bankcard = models.CharField(max_length=16, null=True, blank=True, verbose_name='Банківська карта')
     balance = models.BigIntegerField(default=0, verbose_name='Баланс')
     info = models.CharField(max_length=1000, null=True, blank=True, verbose_name='Додаткова інформація')
+
+
+class Payout(TimeBaseModel):
+
+    class Meta:
+        db_table = 'payouts'
+        verbose_name = 'Платіж'
+        verbose_name_plural = 'Платежі'
+
+    PayoutTypeEnum = (
+        ('MINUS', 'Списання'),
+        ('PLUS', 'Нарахування')
+    )
+
+    id = models.BigAutoField(primary_key=True)
+    photo_id = models.CharField(max_length=255, null=True, blank=True, verbose_name='Телеграм ID чеку')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='Клієнт', null=True, blank=True)
+    value = models.IntegerField(default=0, verbose_name='Кошти')
+    user_answer = models.CharField(max_length=1000, null=False, verbose_name='Інформація для клієнта')
+    description = models.CharField(max_length=1000, null=True, blank=True, verbose_name='Інформація для адміна')
+    type = models.CharField(choices=PayoutTypeEnum, default='MINUS', null=False)
+
+    def __str__(self):
+        return f'Платіж {self.type} - {self.value}'
 
 
 class BaseForm(ModelForm):

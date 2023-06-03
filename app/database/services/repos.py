@@ -20,6 +20,9 @@ class UserRepo(BaseRepo[User]):
     async def get_user_card(self, card: str) -> User:
         return await self.get_one(self.model.card == card)
 
+    async def get_user_status(self, status: UserStatusEnum) -> list[User]:
+        return await self.get_all(self.model.status == status)
+
     async def get_user_name(self, full_name: str) -> User:
         return await self.get_one(self.model.full_name == full_name)
 
@@ -64,7 +67,7 @@ class ChatRepo(BaseRepo[Chat]):
         return await self.get_one(self.model.chat_id == chat_id)
 
     async def get_chat_user(self, user_id: int) -> Chat:
-        return await self.get_one(self.model.admin_id == user_id, self.model.active == True)
+        return await self.get_one(self.model.user_id == user_id, self.model.active == True)
 
     async def get_chat_admin(self, admin_id: int) -> Chat:
         return await self.get_one(self.model.admin_id == admin_id, self.model.active == True)

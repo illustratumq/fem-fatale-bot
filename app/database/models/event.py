@@ -25,7 +25,7 @@ class Event(TimedBaseModel):
     status = sa.Column(ENUM(EventStatusEnum), nullable=True, default=EventStatusEnum.ACTIVE)
     type = sa.Column(ENUM(EventTypeEnum), nullable=True, default=EventTypeEnum.HELP)
 
-    async def create_event_photo(self, bot: Bot,  config: Config, event_db, user, admin=None):
+    async def create_event_photo(self, bot: Bot,  config: Config, event_db, user, admin=None, done=False):
         title = {
             EventTypeEnum.AUTH: 'Новий клієнт',
             EventTypeEnum.HELP: 'Клієнт задав питання',
@@ -34,14 +34,30 @@ class Event(TimedBaseModel):
         }
         status = {
             EventStatusEnum.ACTIVE: 'Активний',
-            EventStatusEnum.PROCESSED: f'Модерється by {admin.full_name if admin else "Невизначено"}',
+            EventStatusEnum.PROCESSED: f'Модерується by {admin.full_name if admin else "Невизначено"}',
             EventStatusEnum.DONE: f'Виконано by {admin.full_name if admin else "Невизнено"}'
         }
         photo = make_event_photo(title=title[self.type], description=self.description,
-                                 status=status[self.status], client=user.full_name)
+                                 status=status[self.status], client=user.full_name, done=done)
         msg = await bot.send_photo(config.misc.media_channel_id, InputFile(photo))
         await event_db.update_event(self.id, url=msg.url)
         os.remove(photo)
+
+    def create_for_admin_text(self, user):
+        title = {
+            EventTypeEnum.AUTH: 'Новий клієнт',
+            EventTypeEnum.HELP: 'Клієнт задав питання',
+            EventTypeEnum.PAYOUT: 'Виплата кешбеку',
+            EventTypeEnum.RESERV: 'Бронювання закладу'
+        }
+        text = (
+            f'Подія: {title[self.type]}\n\n'
+            f'Опис: {self.description}\n'
+            f'Клієнт: {user.get_mentioned()}{hide_link(self.url)}'
+        )
+        if self.type == EventTypeEnum.PAYOUT:
+            text += f'Банківська карта: {user.bankcard}'
+        return text
 
     def create_event_text(self):
         title = {
@@ -52,9 +68,15 @@ class Event(TimedBaseModel):
         }
         return title[self.type] + hide_link(self.url)
 
-    async def make_message(self, bot: Bot, config, event_db, user, admin=None):
-        await self.create_event_photo(bot, config, event_db, user, admin)
+    async def make_message(self, bot: Bot, config, event_db, user, admin=None, restore_keyboard: bool = False):
+        await self.create_event_photo(bot, config, event_db, user, admin,
+                                      done=True if self.status == EventStatusEnum.DONE else False)
         reply_markup = event_kb(await get_start_link(f'event-{self.id}'))
-        message = await bot.send_message(config.misc.event_channel_id, self.create_event_text(),
-                                         reply_markup=reply_markup)
+        if not self.message_id:
+            message = await bot.send_message(config.misc.event_channel_id, self.create_event_text(),
+                                             reply_markup=reply_markup)
+        else:
+            message = await bot.edit_message_text(
+                self.create_event_text(), config.misc.event_channel_id, self.message_id,
+                reply_markup=reply_markup if restore_keyboard else None)
         await event_db.update_event(self.id, message_id=message.message_id)

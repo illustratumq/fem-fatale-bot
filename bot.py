@@ -42,7 +42,8 @@ async def main():
         AllowedUpdates.MESSAGE + AllowedUpdates.CALLBACK_QUERY
     )
 
-    # await setup_excel_data(sqlalchemy_session_pool)
+    if config.misc.reset_db:
+        await setup_excel_data(sqlalchemy_session_pool)
 
     try:
         await dp.skip_updates()

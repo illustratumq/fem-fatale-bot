@@ -4,7 +4,7 @@ from aiogram.dispatcher.filters import CommandStart
 from aiogram.types import Message, ContentTypes
 
 from app.config import Config
-from app.database.services.enums import UserStatusEnum, EventTypeEnum
+from app.database.services.enums import UserStatusEnum, EventTypeEnum, UserRoleEnum
 from app.database.services.repos import UserRepo, EventRepo
 from app.keyboards.reply.menu import menu_kb, introduction_kb, share_phone_kb, Buttons
 from app.states.states import AuthSG
@@ -15,7 +15,10 @@ async def start_cmd(msg: Message, user_db: UserRepo, state: FSMContext):
     if user is None:
         await introduction_cmd(msg)
     else:
-        await msg.answer(f'Ви перейшли в Гловне меню 👋', reply_markup=menu_kb(user.is_authorized))
+        if user.status == UserStatusEnum.INACTIVE:
+            await user_db.update_user(user.user_id, status=UserStatusEnum.ACTIVE)
+        admin = user.role == UserRoleEnum.ADMIN
+        await msg.answer(f'Ви перейшли в Гловне меню 👋', reply_markup=menu_kb(user.is_authorized, admin))
         await state.finish()
 
 

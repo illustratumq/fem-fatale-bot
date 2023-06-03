@@ -28,3 +28,34 @@ class User(TimedBaseModel):
     @property
     def my_card(self):
         return '0' * (4 - len(self.card)) + self.card
+
+    def get_mentioned(self):
+        return f'<a href="tg://user?id={self.user_id}">{self.full_name}</a>'
+
+    def user_comment_text(self):
+        return self.info if self.info else 'Немає'
+
+    def user_info_text(self):
+        role = {
+            UserRoleEnum.USER: 'Клієнт',
+            UserRoleEnum.PARTNER: 'Партнер',
+            UserRoleEnum.MODERATOR: 'Модератор',
+            UserRoleEnum.ADMIN: 'Адмін',
+            UserRoleEnum.COMPETITION: 'Конкурент'
+        }
+        status = {
+            UserStatusEnum.UNAUTHORIZED: 'Не авторизований',
+            UserStatusEnum.ACTIVE: 'Активний',
+            UserStatusEnum.INACTIVE: 'Не активний'
+        }
+
+        return (
+            f'Ім\'я: {self.full_name}\n'
+            f'Статус: {status[self.status]}\n'
+            f'Баланс: {self.balance}\n'
+            f'Мобільний телефон: {self.phone}\n'
+            f'Карта клієнта: {self.my_card}\n'
+            f'Банківська карта: {self.bankcard}\n'
+            f'Роль: {role[self.role]}\n'
+            f'Коментар: {self.user_comment_text()}'
+        )

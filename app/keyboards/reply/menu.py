@@ -1,7 +1,7 @@
 from app.keyboards.reply.base import *
 
 
-def menu_kb(authorized: bool = True):
+def menu_kb(authorized: bool = True, admin: bool = False):
 
     keyboard = [
         [KeyboardButton(Buttons.menu.news)],
@@ -10,8 +10,14 @@ def menu_kb(authorized: bool = True):
         [KeyboardButton(Buttons.menu.about), KeyboardButton(Buttons.menu.help)]
     ]
 
-    if not authorized:
-        keyboard[0].insert(0, KeyboardButton(Buttons.menu.auth))
+    if not authorized and admin:
+        keyboard.insert(0, [KeyboardButton(Buttons.menu.auth)])
+        keyboard[0].insert(0, KeyboardButton(Buttons.menu.admin))
+    else:
+        if not authorized:
+            keyboard[0].insert(0, KeyboardButton(Buttons.menu.auth))
+        if admin:
+            keyboard[0].insert(0, KeyboardButton(Buttons.menu.admin))
 
     return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=keyboard)
 

@@ -13,4 +13,5 @@ class Partner(TimedBaseModel):
     phone = sa.Column(sa.VARCHAR(12), nullable=True)
     city = sa.Column(sa.VARCHAR(20), nullable=True, default='Київ')
     description = sa.Column(sa.VARCHAR(1000), nullable=True)
+    priority = sa.Column(sa.INTEGER, nullable=True)
 
