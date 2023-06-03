@@ -24,3 +24,7 @@ class User(TimedBaseModel):
     @property
     def is_authorized(self):
         return self.status != UserStatusEnum.UNAUTHORIZED
+
+    @property
+    def my_card(self):
+        return '0' * (4 - len(self.card)) + self.card

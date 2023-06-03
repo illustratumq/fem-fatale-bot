@@ -9,6 +9,7 @@ from sqlalchemy.orm import sessionmaker
 
 from app import middlewares, handlers
 from app.config import Config
+from app.database.excel.partners.controller import ExcelPartnerController
 from app.database.excel.users.controller import ExcelUserController
 from app.database.services.db_engine import create_db_engine_and_session_pool
 
@@ -17,6 +18,7 @@ log = logging.getLogger(__name__)
 
 async def setup_excel_data(session: sessionmaker):
     await ExcelUserController('app/database/excel/users/users.xlsx').add_users_to_db(session)
+    await ExcelPartnerController('app/database/excel/partners/partners.xlsx').add_partners_to_db(session)
 
 
 async def main():
@@ -31,7 +33,7 @@ async def main():
         config.db.sqlalchemy_url
     )
 
-    environments = dict(bot=bot, config=config)
+    environments = dict(bot=bot, config=config, dp=dp)
 
     middlewares.setup(dp, sqlalchemy_session_pool, environments)
     handlers.setup(dp)

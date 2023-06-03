@@ -15,7 +15,7 @@ async def create_db_engine_and_session_pool(sqlalchemy_url: str, echo: bool = Fa
     )
 
     async with engine.begin() as conn:
-        await conn.run_sync(BaseModel.metadata.drop_all)
+        # await conn.run_sync(BaseModel.metadata.drop_all)
         await conn.run_sync(BaseModel.metadata.create_all)
 
     sqlalchemy_session_pool = sessionmaker(bind=engine, expire_on_commit=False, class_=AsyncSession)

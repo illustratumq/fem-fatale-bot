@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker
 
 from app.database.models import *
 from app.database.services.db_ctx import BaseRepo
-from app.database.services.enums import UserStatusEnum
+from app.database.services.enums import UserStatusEnum, ArticleStatusEnum
 
 
 class UserRepo(BaseRepo[User]):
@@ -49,7 +49,7 @@ class PartnerRepo(BaseRepo[Partner]):
 
     async def get_partners_category(self, category: str, city: str = None) -> list[Partner]:
         if city:
-            await self.get_all(self.model.category == category, self.model.city == city)
+            return await self.get_all(self.model.category == category, self.model.city == city)
         else:
             return await self.get_all(self.model.category == category)
 
@@ -82,6 +82,12 @@ class ArticleRepo(BaseRepo[Article]):
     async def get_article(self, article_id: int) -> Article:
         return await self.get_one(self.model.id == article_id)
 
+    async def get_article_status(self, status: ArticleStatusEnum | str) -> list[Article]:
+        if status == '*':
+            return await self.get_all()
+        else:
+            return await self.get_all(self.model.status == status)
+
     async def update_article(self, article_id: int, **kwargs) -> None:
         return await self.update(self.model.id == article_id, **kwargs)
 
@@ -105,13 +111,13 @@ class EventRepo(BaseRepo[Event]):
 class MediaRepo(BaseRepo[Media]):
     model = Media
 
-    async def get_event(self, media_id: int) -> Media:
+    async def get_media(self, media_id: int) -> Media:
         return await self.get_one(self.model.id == media_id)
 
-    async def update_event(self, media_id: int, **kwargs) -> None:
+    async def update_media(self, media_id: int, **kwargs) -> None:
         return await self.update(self.model.id == media_id, **kwargs)
 
-    async def delete_event(self, media_id: int):
+    async def delete_media(self, media_id: int):
         return await self.delete(self.model.id == media_id)
 
 

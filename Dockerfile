@@ -7,4 +7,5 @@ WORKDIR /src
 
 COPY . /src
 
+#RUN py app/admin/manage.py runserver
 RUN python -m pip install --upgrade pip && python -m pip install --requirement requirements.txt

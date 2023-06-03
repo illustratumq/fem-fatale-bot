@@ -18,6 +18,16 @@ def make_event_photo(title: str, description: str, status: str, client: str):
     return new_path
 
 
+def make_card_photo(card: str):
+    logo = Image.open('app/data/logo.png')
+    path = f'app/data/{card}.png'
+    font = ImageFont.truetype('arial.ttf', 120)
+    drawer = ImageDraw.Draw(logo)
+    drawer.text((450 - len(card)/2*65, 515), card, fill='black', font=font)
+    logo.save(path)
+    return path
+
+
 def split_string(string: str, n: int = 45):
     new_string = ''
     symbols = 0

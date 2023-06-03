@@ -23,6 +23,14 @@ def introduction_kb():
     return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=keyboard)
 
 
+def basic_kb(buttons: list | tuple):
+    return ReplyKeyboardMarkup(
+        row_width=max(map(len, buttons)),
+        resize_keyboard=True,
+        keyboard=[*buttons] if isinstance(buttons[0], list) else [buttons]
+    )
+
+
 def share_phone_kb():
     keyboard = [
         [KeyboardButton(Buttons.menu.phone, request_contact=True)],

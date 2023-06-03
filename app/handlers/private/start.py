@@ -51,23 +51,23 @@ async def skip_authorization_cmd(msg: Message, user_db: UserRepo, event_db: Even
     phone = data['phone'] if 'phone' in data.keys() else None
     if not user or all([user, phone]):
         user = await user_db.add(user_id=msg.from_user.id, full_name=msg.from_user.full_name,
-                                 phone=phone, status=UserStatusEnum.ACTIVE,
-                                 info='Новий клієнт. Карта видана автоматично')
-        await user_db.generate_user_card(msg.from_user.id)
+                                 phone=phone, info='Новий клієнт. Карта видана автоматично')
         text = (
             f'<b>Здається, Ти наш новий клієнт! 🎉</b>\n\n'
             f'Або раніше використовувала(-вав) інший номер телефону при реєстрації '
             f'в мобільному додатку Femme Fatale.\n\n'
         )
         if phone:
+            await user_db.generate_user_card(msg.from_user.id)
+            await user_db.update_user(msg.from_user.id, status=UserStatusEnum.ACTIVE)
+            user = await user_db.get_user(msg.from_user.id)
             text += f'Ми автоматично видали тобі карту клієнта {user.card}'
         else:
             event = await event_db.add(
                 user_id=msg.from_user.id, description='Користувач не авторизувався. Необхідно видати карту клієнта',
                 type=EventTypeEnum.AUTH
             )
-            await event.make_message()
-
+            await event.make_message(msg.bot, config, event_db, user)
         await msg.answer(text, reply_markup=menu_kb())
         await state.finish()
     else:
@@ -103,7 +103,7 @@ async def search_user_cmd(msg: Message, user_db: UserRepo, state: FSMContext, ev
 
 def setup(dp: Dispatcher):
     dp.register_message_handler(start_cmd, CommandStart(), state='*')
-    dp.register_message_handler(start_cmd, text=Buttons.menu.back, state='*')
+    dp.register_message_handler(start_cmd, text=(Buttons.menu.back, Buttons.back.menu), state='*')
     dp.register_message_handler(authorization_cmd, text=Buttons.menu.auth)
     dp.register_message_handler(authorization_cmd, state=AuthSG.Introduction, text=Buttons.menu.introduction)
     dp.register_message_handler(search_user_cmd, state=AuthSG.Phone, content_types=ContentTypes.CONTACT)
