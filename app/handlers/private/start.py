@@ -1,13 +1,18 @@
+import re
+
 from aiogram import Dispatcher
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import CommandStart
 from aiogram.types import Message, ContentTypes
 
 from app.config import Config
-from app.database.services.enums import UserStatusEnum, EventTypeEnum, UserRoleEnum
-from app.database.services.repos import UserRepo, EventRepo
-from app.keyboards.reply.menu import menu_kb, introduction_kb, share_phone_kb, Buttons
-from app.states.states import AuthSG
+from app.database.services.enums import UserStatusEnum, EventTypeEnum, UserRoleEnum, EventStatusEnum
+from app.database.services.repos import UserRepo, EventRepo, PayoutRepo
+from app.filters import IsAdminFilter
+from app.keyboards.reply.menu import menu_kb, introduction_kb, share_phone_kb, Buttons, basic_kb
+from app.states.states import AuthSG, AdminEventSG
+
+EVENT_REGEX = re.compile(r'event-(\d+)')
 
 
 async def start_cmd(msg: Message, user_db: UserRepo, state: FSMContext):
@@ -77,7 +82,8 @@ async def skip_authorization_cmd(msg: Message, user_db: UserRepo, event_db: Even
         await start_cmd(msg, user_db, state)
 
 
-async def search_user_cmd(msg: Message, user_db: UserRepo, state: FSMContext, event_db: EventRepo, config: Config):
+async def search_user_cmd(msg: Message, user_db: UserRepo, payout_db: PayoutRepo, state: FSMContext,
+                          event_db: EventRepo, config: Config):
     phone = msg.contact.phone_number.replace('+', '').replace(' ', '')
     user_by_phone = await user_db.get_user_phone(phone)
     if not user_by_phone:
@@ -85,6 +91,7 @@ async def search_user_cmd(msg: Message, user_db: UserRepo, state: FSMContext, ev
         await skip_authorization_cmd(msg, user_db, event_db, config, state)
     else:
         await msg.answer(f'Ура, ми змогли розпізнати тебе, {user_by_phone.first_name.capitalize()}! 🎉')
+        payout = await payout_db.get_user_default(user_id=user_by_phone.user_id)
         #  Шукаємо користувача по цьому юзер айді, я якщо він є видаляємо його
 
         user_by_id = await user_db.get_user(msg.from_user.id)
@@ -96,7 +103,8 @@ async def search_user_cmd(msg: Message, user_db: UserRepo, state: FSMContext, ev
         new_user_data.update(
             user_id=msg.from_user.id, status=UserStatusEnum.ACTIVE
         )
-        await user_db.add(**new_user_data, info='Авторизований клієнт')
+        await user_db.add(**new_user_data)
+        await payout_db.update_payout(payout.id, user_id=msg.from_user.id)
 
         #  Видаляємо дані юзера знайденого за номером телефону
         await user_db.delete_user(user_by_phone.user_id)
@@ -104,7 +112,28 @@ async def search_user_cmd(msg: Message, user_db: UserRepo, state: FSMContext, ev
         await state.finish()
 
 
+async def event_processing_cmd(msg: Message, user_db: UserRepo, event_db: EventRepo, deep_link: re.Match,
+                               config: Config, state: FSMContext):
+    event_id = int(deep_link.groups()[-1])
+    event = await event_db.get_event(event_id)
+    await event_db.update_event(event_id, admin_id=msg.from_user.id, status=EventStatusEnum.PROCESSED)
+    admin = await user_db.get_user(msg.from_user.id)
+    user = await user_db.get_user(event.user_id)
+    text = event.create_for_admin_text(user)
+    await event.make_message(msg.bot, config, event_db, user, admin)
+    buttons = [
+        [Buttons.admin.create_message], [Buttons.admin.create_chat],
+        [Buttons.admin.cancel]
+    ]
+    if event.type == EventTypeEnum.PAYOUT:
+        buttons.insert(0, [Buttons.admin.create_payout])
+    await msg.answer(text, reply_markup=basic_kb(buttons))
+    await state.update_data(event_id=event_id, user_id=user.user_id)
+    await AdminEventSG.Select.set()
+
+
 def setup(dp: Dispatcher):
+    dp.register_message_handler(event_processing_cmd, IsAdminFilter(), CommandStart(EVENT_REGEX), state='*')
     dp.register_message_handler(start_cmd, CommandStart(), state='*')
     dp.register_message_handler(start_cmd, text=(Buttons.menu.back, Buttons.back.menu), state='*')
     dp.register_message_handler(authorization_cmd, text=Buttons.menu.auth)

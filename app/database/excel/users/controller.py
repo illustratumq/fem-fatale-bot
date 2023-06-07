@@ -6,8 +6,8 @@ import pandas as pd
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
 
-from app.database.services.enums import UserRoleEnum
-from app.database.services.repos import UserRepo
+from app.database.services.enums import UserRoleEnum, PayoutTypeEnum
+from app.database.services.repos import UserRepo, PayoutRepo
 
 log = logging.getLogger(__name__)
 
@@ -22,6 +22,7 @@ class ExcelUser:
         self.balance = self.casting_integer_type(data['balance'][index], int)
         self.bankcard = self.casting_integer_type(data['bankcard'][index])
         self.role = data['type'][index]
+        self.user_id = data['user_id'][index] if 'user_id' in data.keys() else int(self.phone)
 
     def to_json(self):
         roles = {
@@ -32,7 +33,8 @@ class ExcelUser:
         }
         return dict(
             full_name=self.full_name, phone=self.phone,
-            card=self.card, balance=self.balance, bankcard=self.bankcard, role=roles[self.role]
+            card=self.card, balance=self.balance, bankcard=self.bankcard, role=roles[self.role],
+            user_id=self.user_id
         )
 
     @staticmethod
@@ -72,6 +74,12 @@ class ExcelUserController:
     async def add_users_to_db(self, session: sessionmaker):
         session: AsyncSession = session()
         user_db = UserRepo(session)
+        payout_db = PayoutRepo(session)
         for user in self.read():
-            await user_db.add(**user.to_json(), user_id=int(user.phone))
+            await user_db.add(**user.to_json())
+            if isinstance(user.balance, int) and user.balance > 0:
+                await payout_db.add(user_id=user.user_id, price=user.balance, type=PayoutTypeEnum.PLUS, tag='default',
+                                    description='Цей платіж створений ботом і враховує початковий баланс клієнта')
         log.info(f'Додано {self.shape} користувачів')
+        await session.commit()
+        await session.close()

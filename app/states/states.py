@@ -21,14 +21,9 @@ class AdminEventSG(StatesGroup):
     Select = State()
     OneTimeMessage = State()
     Payout = State()
-    Value = State()
-    Photo = State()
     Confirm = State()
-    ConfirmPayout = State()
 
 
-class AdminPayoutSG(StatesGroup):
-    Payout = State()
-    Value = State()
-    Photo = State()
+class AdminPanelSG(StatesGroup):
+    OneTimeMessage = State()
     Confirm = State()

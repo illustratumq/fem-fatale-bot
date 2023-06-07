@@ -5,5 +5,5 @@ from app.handlers.private import start
 
 
 def setup(dp: Dispatcher):
-    admin.setup(dp)
     private.setup(dp)
+    admin.setup(dp)

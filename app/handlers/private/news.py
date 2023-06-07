@@ -59,11 +59,9 @@ async def paginate_news_cmd(msg: Message, article_db: ArticleRepo, media_db: Med
     await state.set_state(state='news')
     if article.media_id:
         media = await media_db.get_media(article.media_id)
-        if len(media.files) > 1:
-            data = dict(caption=text)
+        if media.is_media_group():
             await msg.answer(f'Стаття {articles.index(article) + 1} з {len(articles)}', reply_markup=reply_markup)
-            group = MediaGroup([InputMediaPhoto(file, **(data if media.files[-1] == file else {})) for file in media.files])
-            await msg.answer_media_group(group)
+            await msg.answer_media_group(media.get_media_group(text))
         else:
             await msg.answer_photo(media.files[0], caption=text, reply_markup=reply_markup)
     else:

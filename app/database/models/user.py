@@ -27,7 +27,8 @@ class User(TimedBaseModel):
 
     @property
     def my_card(self):
-        return '0' * (4 - len(self.card)) + self.card
+        card = self.card.replace('*', '')
+        return '0' * (4 - len(card)) + card
 
     def get_mentioned(self):
         return f'<a href="tg://user?id={self.user_id}">{self.full_name}</a>'

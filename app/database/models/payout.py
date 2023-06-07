@@ -8,21 +8,26 @@ from app.database.services.enums import PayoutTypeEnum
 
 class Payout(TimedBaseModel):
     id = sa.Column(sa.BIGINT, primary_key=True, autoincrement=True)
-    photo_id = sa.Column(sa.VARCHAR(255), nullable=True)
+    media_id = sa.Column(sa.BIGINT, sa.ForeignKey('medias.id', ondelete='SET NULL'), nullable=True)
     user_id = sa.Column(sa.BIGINT, sa.ForeignKey('users.user_id', ondelete='SET NULL'), nullable=False)
-    value = sa.Column(sa.INTEGER, nullable=False, default=0)
-    user_answer = sa.Column(sa.VARCHAR(1000), nullable=False)
+    partner_id = sa.Column(sa.BIGINT, sa.ForeignKey('partners.id', ondelete='SET NULL'), nullable=True)
+    price = sa.Column(sa.INTEGER, nullable=False, default=0)
+    general_percent = sa.Column(sa.INTEGER, nullable=False, default=0)
+    service_percent = sa.Column(sa.INTEGER, nullable=False, default=0)
+    user_percent = sa.Column(sa.INTEGER, nullable=False, default=0)
+    comment = sa.Column(sa.VARCHAR(1000), nullable=True)
     description = sa.Column(sa.VARCHAR(1000), nullable=True)
     type = sa.Column(ENUM(PayoutTypeEnum), default=PayoutTypeEnum.MINUS, nullable=False)
+    tag = sa.Column(sa.VARCHAR(15), nullable=False, default='edited')
 
-    def construct_payout_text(self):
+    async def construct_payout_text(self, partner_db):
         types = {
-            PayoutTypeEnum.MINUS: 'Списання балів',
-            PayoutTypeEnum.PLUS: 'Нарахування балів'
+            PayoutTypeEnum.MINUS: 'Списання {} балів',
+            PayoutTypeEnum.PLUS: 'Нарахування {} балів'
         }
-        return (
-            f'Платіж: {types[self.type]}\n'
-            f'Кількість: {self.value}\n'
-            f'Коментар: {self.user_answer}\n'
-            f'Дата: {format_datetime(self.created_at, locale="uk_UA")}'
-        )
+        text = f'{types[self.type].format(self.price)}\n'
+        if self.partner_id:
+            partner = await partner_db.get_partner(self.partner_id)
+            text += f'Заклад: {partner.name}\n'
+        text += f'Дата: {format_datetime(self.created_at, locale="uk_UA")}'
+        return text

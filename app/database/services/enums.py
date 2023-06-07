@@ -36,3 +36,8 @@ class EventTypeEnum(Enum):
 class PayoutTypeEnum(Enum):
     MINUS = 'MINUS'
     PLUS = 'PLUS'
+
+
+class ContentTypeEnum(Enum):
+    VIDEO = 'VIDEO'
+    PHOTO = 'PHOTO'

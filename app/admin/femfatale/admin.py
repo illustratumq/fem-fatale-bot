@@ -2,30 +2,71 @@ from django.contrib import admin
 from .models import Partner, User, Media, Article, Payout, BaseForm
 
 
-@admin.register(Partner)
-class UserAdmin(admin.ModelAdmin):
+@admin.register(Media)
+class MediaAdmin(admin.ModelAdmin):
 
     form = BaseForm
 
-    list_display = ('name', 'category', 'cashback', 'city', 'updated_at', 'id', 'priority')
+    list_display = ('name', 'id', 'created_at')
+    ordering = ['-created_at']
+    search_fields = ('name', 'id')
+
+
+@admin.action(description='Відкрити обрані новини')
+def make_published(modeladmin, request, queryset):
+    queryset.update(status='ACTIVE')
+
+
+@admin.register(Partner)
+class PartnerAdmin(admin.ModelAdmin):
+
+    form = BaseForm
+
+    list_display = ('name', 'category', 'city', 'priority', 'updated_at')
     list_filter = ('city', 'category')
-    search_fields = ("name__startswith",)
+    search_fields = ('name__startswith', 'category__startswith')
     ordering = ['-updated_at', '-priority']
+    autocomplete_fields = ('media', )
+
+    fieldsets = (
+        ('Основна інформація', {
+            'fields': ('name', 'category', 'cashback')
+        }),
+        ('Партнерські дані', {
+            'fields': ('city', 'address', 'phone'),
+        }),
+        ('Інше', {
+            'fields': ('description', 'priority'),
+        }),
+    )
 
 
 @admin.register(Payout)
-class UserAdmin(admin.ModelAdmin):
+class PayoutAdmin(admin.ModelAdmin):
 
     form = BaseForm
 
-    list_display = ('type', 'value', 'user_id', 'updated_at', 'id')
-    list_filter = ('type', )
+    list_display = ('__str__', 'price', 'user', 'updated_at')
+    list_filter = ('type', 'tag')
     search_fields = ("user_id__startswith",)
     ordering = ['-updated_at']
+    autocomplete_fields = ('user', 'media', 'partner')
+
+    fieldsets = (
+        ('Основні дані', {
+            'fields': ('tag', 'type', 'user', 'partner', 'media', 'price', 'comment')
+        }),
+        ('Розподіл коштів', {
+            'fields': ('general_percent', 'service_percent', 'user_percent',),
+        }),
+        ('Для адміністраторів', {
+            'fields': ('description', ),
+        }),
+    )
 
 
 @admin.register(Article)
-class UserAdmin(admin.ModelAdmin):
+class ArticleAdmin(admin.ModelAdmin):
 
     form = BaseForm
 
@@ -33,15 +74,8 @@ class UserAdmin(admin.ModelAdmin):
     list_filter = ('status',)
     search_fields = ("name__startswith",)
     ordering = ['-updated_at']
-
-
-@admin.register(Media)
-class UserAdmin(admin.ModelAdmin):
-
-    form = BaseForm
-
-    list_display = ('name', 'id', 'created_at')
-    ordering = ['-created_at']
+    actions = [make_published]
+    autocomplete_fields = ('media',)
 
 
 @admin.register(User)
@@ -51,6 +85,17 @@ class UserAdmin(admin.ModelAdmin):
 
     list_display = ('full_name', 'card', 'phone', 'balance', 'role', 'status', 'updated_at')
     list_filter = ('status', 'role')
-    search_fields = ("card__startswith", "full_name__startswith")
+    search_fields = ('card__startswith', 'full_name__startswith')
     ordering = ['-updated_at']
 
+    fieldsets = (
+        ('Персональна інформація про клієнта', {
+            'fields': ('full_name', 'phone', 'bankcard')
+        }),
+        ('Сервісна інформація про клієнта', {
+            'fields': ('card', 'balance', 'role', 'status'),
+        }),
+        ('Інше', {
+            'fields': ('info',),
+        }),
+    )

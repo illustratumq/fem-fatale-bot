@@ -130,6 +130,12 @@ class PayoutRepo(BaseRepo[Payout]):
     async def get_payout(self, payout_id: int) -> Payout:
         return await self.get_one(self.model.id == payout_id)
 
+    async def get_payout_user(self, user_id: int) -> list[Payout]:
+        return await self.get_all(self.model.user_id == user_id, self.model.tag == 'edited')
+
+    async def get_user_default(self, user_id: int) -> Payout:
+        return await self.get_one(self.model.user_id == user_id, self.model.tag == 'default')
+
     async def update_payout(self, payout_id: int, **kwargs) -> None:
         return await self.update(self.model.id == payout_id, **kwargs)
 

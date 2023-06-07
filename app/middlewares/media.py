@@ -18,6 +18,7 @@ class MediaMiddleware(BaseMiddleware):
             return
         try:
             self.media[msg.media_group_id].append(msg)
+            await asyncio.sleep(self.latency)
             raise CancelHandler()
         except KeyError:
             self.media[msg.media_group_id] = [msg]

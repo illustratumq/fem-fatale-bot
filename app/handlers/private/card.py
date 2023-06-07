@@ -20,9 +20,15 @@ async def user_card_cmd(msg: Message, user_db: UserRepo):
     else:
         card = make_card_photo(user.my_card)
         await msg.answer_photo(InputFile(card), f'Твоя карта клієнта {user.my_card}',
-                               reply_markup=basic_kb([[Buttons.menu.balance], [Buttons.menu.back]]))
+                               reply_markup=basic_kb([[Buttons.menu.balance, Buttons.menu.history],
+                                                      [Buttons.menu.back]]))
         os.remove(card)
+
+async def my_balance_cmd(msg: Message, user_db: UserRepo):
+    user = await user_db.get_user(msg.from_user.id)
+    await msg.answer(f'💰 Твій баланс балів: {user.balance}', reply_markup=basic_kb([Buttons.back.card]))
 
 
 def setup(dp: Dispatcher):
-    dp.register_message_handler(user_card_cmd, text=Buttons.menu.card, state='*')
+    dp.register_message_handler(user_card_cmd, text=(Buttons.menu.card, Buttons.back.card), state='*')
+    dp.register_message_handler(my_balance_cmd, text=Buttons.menu.balance, state='*')
