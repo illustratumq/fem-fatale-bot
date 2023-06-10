@@ -2,6 +2,8 @@ import os
 import sys
 from pathlib import Path
 
+# from django.contrib.auth.models import User
+
 from .config import Config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -9,10 +11,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-0&@g6-1f!xi45p+ohf-a^!ncs(bb=9lb9^e8$=tnd(0sz@9-5+'
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
-
-sys.path.append(r'\Users\pasho\FreelanceProject\fem-fatale-v2-bot')
+sys.path.append(r'\Users\pasho\FreelanceProject\fem-fatale-v2-bot')  # /src
 config = Config.from_env()
+
+ALLOWED_HOSTS = ['*', config.misc.server_host_ip]
 
 
 INSTALLED_APPS = [

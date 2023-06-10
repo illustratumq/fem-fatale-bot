@@ -25,8 +25,13 @@ class DbConfig:
 
 
 @dataclass
+class Miscellaneous:
+    server_host_ip: str
+
+@dataclass
 class Config:
     db: DbConfig
+    misc: Miscellaneous
 
     @classmethod
     def from_env(cls, path: str = None) -> 'Config':
@@ -40,5 +45,8 @@ class Config:
                 user=env.str('DB_USER', 'postgres'),
                 password=env.str('DB_PASS', 'postgres'),
                 database=env.str('DB_NAME', 'postgres')
+            ),
+            misc=Miscellaneous(
+                server_host_ip=env.str('SERVER_HOST_IP')
             )
         )

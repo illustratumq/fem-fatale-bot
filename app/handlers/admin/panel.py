@@ -3,20 +3,24 @@ from aiogram.dispatcher import FSMContext
 from aiogram.types import Message
 
 from app.config import Config
-from app.database.services.enums import EventTypeEnum
-from app.database.services.repos import UserRepo, EventRepo
+from app.database.services.repos import UserRepo
 from app.filters import IsAdminFilter
 from app.keyboards import Buttons
 from app.keyboards.reply.menu import basic_kb
 from app.states.states import AdminPanelSG
 
 
-async def admin_panel_cmd(msg: Message, state: FSMContext):
+async def admin_panel_cmd(msg: Message, state: FSMContext, config: Config):
     reply_markup = basic_kb([
         [Buttons.admin.database, Buttons.admin.search],
         [Buttons.back.menu]
     ])
-    await msg.answer('Ви перейшли в адмін панель\n/add - Додати нову медіа групу', reply_markup=reply_markup)
+    text = (
+        'Ви перейшли в адмін панель\n\n'
+        '/add - Додати нову медіа групу\n\n'
+        f'Перейти на сайт: {"http://" + config.misc.server_host_ip + ":8000/admin"}'
+    )
+    await msg.answer(text, reply_markup=reply_markup)
     await state.finish()
 
 

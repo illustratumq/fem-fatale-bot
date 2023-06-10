@@ -42,10 +42,12 @@ class RedisConfig:
 class Miscellaneous:
     log_level: str
     timezone: str
+    server_host_ip: str
+    django_login: str
+    django_password: str
     media_channel_id: str
     event_channel_id: str
     reset_db: bool
-
 
 @dataclass
 class Config:
@@ -81,6 +83,9 @@ class Config:
                 timezone=env.str('TIMEZONE', 'Europe/Kiev'),
                 media_channel_id=env.str('MEDIA_CHANNEL_ID'),
                 event_channel_id=env.str('EVENT_CHANNEL_ID'),
-                reset_db=env.bool('RESET_DATABASE', False)
+                reset_db=env.bool('RESET_DATABASE', False),
+                django_login=env.str('DJANGO_LOGIN', 'admin'),
+                django_password=env.str('DJANGO_PASSWORD', 'Admin!'),
+                server_host_ip=env.str('SERVER_HOST_IP')
             )
         )

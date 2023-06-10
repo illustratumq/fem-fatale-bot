@@ -119,10 +119,12 @@ async def event_processing_cmd(msg: Message, user_db: UserRepo, event_db: EventR
     await event_db.update_event(event_id, admin_id=msg.from_user.id, status=EventStatusEnum.PROCESSED)
     admin = await user_db.get_user(msg.from_user.id)
     user = await user_db.get_user(event.user_id)
-    text = event.create_for_admin_text(user)
+    url = config.misc.server_host_ip + ':8000' + f'/admin/femfatale/user/{user.user_id}/change/'
+    text = event.create_for_admin_text(user) + f'\n\n🌍 <a href="{url}">Перейти в адмін панель</a>'
     await event.make_message(msg.bot, config, event_db, user, admin)
     buttons = [
         [Buttons.admin.create_message], [Buttons.admin.create_chat],
+        [Buttons.admin.make_done],
         [Buttons.admin.cancel]
     ]
     if event.type == EventTypeEnum.PAYOUT:

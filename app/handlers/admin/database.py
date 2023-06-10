@@ -1,5 +1,3 @@
-import os
-
 import pandas as pd
 from aiogram import Dispatcher
 from aiogram.types import Message, InputFile

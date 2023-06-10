@@ -3,6 +3,7 @@ __pycache__/
 
 # Keys/Certs/Sessions/Storages and similar
 *.pem
+*.ppk
 *.session
 *.rdb
 *.exe
