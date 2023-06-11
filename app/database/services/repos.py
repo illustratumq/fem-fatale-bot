@@ -30,7 +30,7 @@ class UserRepo(BaseRepo[User]):
         return await self.update(self.model.user_id == user_id, **kwargs)
 
     async def generate_user_card(self, user_id: int):
-        existing_cards = [u.card for u in await self.get_all() if u.card]
+        existing_cards = [u.card.replace('*', '') for u in await self.get_all() if u.card]
         all_cards = set([str(i) for i in range(1, 10000)])
         free_cards = all_cards - set(existing_cards)
         card = random.choice(list(free_cards))
@@ -116,6 +116,9 @@ class MediaRepo(BaseRepo[Media]):
 
     async def get_media(self, media_id: int) -> Media:
         return await self.get_one(self.model.id == media_id)
+
+    async def get_media_name(self, name: str) -> Media:
+        return await self.get_one(self.model.name == name)
 
     async def update_media(self, media_id: int, **kwargs) -> None:
         return await self.update(self.model.id == media_id, **kwargs)

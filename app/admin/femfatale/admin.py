@@ -49,18 +49,24 @@ class PayoutAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'price', 'user', 'updated_at')
     list_filter = ('type', 'tag')
     search_fields = ("user_id__startswith",)
-    ordering = ['-updated_at']
+    ordering = ['-updated_at', '-tag']
     autocomplete_fields = ('user', 'media', 'partner')
 
     fieldsets = (
-        ('Основні дані', {
-            'fields': ('tag', 'type', 'user', 'partner', 'media', 'price', 'comment')
+        ('Тип платежу', {
+            'fields': ('tag', 'type')
         }),
-        ('Розподіл коштів', {
-            'fields': ('general_percent', 'service_percent', 'user_percent',),
+        ('Призначення чеку', {
+            'fields': ('user', 'partner', 'media', 'payout_date', 'comment')
+        }),
+        ('Кешбек та сума чеку', {
+            'fields': ('price', 'general_price', 'service_price', 'user_price'),
+        }),
+        ('Розподіл відсотків', {
+            'fields': ('general_percent', 'service_percent', 'user_percent'),
         }),
         ('Для адміністраторів', {
-            'fields': ('description', ),
+            'fields': ('description',),
         }),
     )
 

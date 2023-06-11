@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
@@ -124,7 +126,7 @@ class User(TimeBaseModel):
     phone = models.CharField(max_length=12, null=True, blank=True, verbose_name='Телефон')
     card = models.CharField(max_length=10, null=True, blank=True, verbose_name='Карта клієнта', unique=True)
     bankcard = models.CharField(max_length=16, null=True, blank=True, verbose_name='Банківська карта')
-    balance = models.BigIntegerField(default=0, verbose_name='Баланс')
+    balance = models.BigIntegerField(default=0, verbose_name='Баланс, грн', help_text='*Рахується автоматично')
     info = models.CharField(max_length=1000, null=True, blank=True, verbose_name='Коментар для адміністраторів')
 
     def __str__(self):
@@ -149,29 +151,51 @@ class Payout(TimeBaseModel):
     )
 
     id = models.BigAutoField(primary_key=True)
-    media = models.ForeignKey(Media,  on_delete=models.SET_NULL, verbose_name='Фото', null=True, blank=True)
+    payout_date = models.DateTimeField(verbose_name='Дата отримання чеку', default=datetime.now())
+    media = models.ForeignKey(Media,  on_delete=models.SET_NULL, verbose_name='Фото чеку', null=True, blank=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='Клієнт', null=False)
     partner = models.ForeignKey(Partner, on_delete=models.SET_NULL, verbose_name='Заклад', null=True, blank=True)
-    price = models.IntegerField(default=0, verbose_name='Сума чеку')
-    general_percent = models.IntegerField(default=0, verbose_name='Загальний кешбек (у відсотках)')
-    service_percent = models.IntegerField(default=0, verbose_name='Прибуток сервісу (у відсотках)')
-    user_percent = models.IntegerField(default=0, verbose_name='Кешбкек клієнту (у відсотках)')
-    comment = models.CharField(max_length=1000, null=True, blank=True, verbose_name='Коментар для клієнта')
+
+    # PRICE
+    price = models.IntegerField(verbose_name='Чиста сума чеку, грн', help_text='Обов\'язкове поле')
+    general_price = models.IntegerField(verbose_name='Загальний кешбек, грн', null=True, blank=True,
+                                        help_text='*Рахується автоматично після зберігання')
+    service_price = models.IntegerField(verbose_name='Наш кешбек, грн', null=True, blank=True,
+                                        help_text='*Рахується автоматично після зберігання')
+    user_price = models.IntegerField(verbose_name='Кешбек клієнта, грн', null=True, blank=True,
+                                     help_text='*Рахується автоматично після зберігання')
+
+    # PERCENT
+    general_percent = models.IntegerField(verbose_name='Загальний кешбек',
+                                          help_text='Загальний відсоток кешбеку, який нам платить заклад. '
+                                                    'Обов\'язкове поле')
+    service_percent = models.IntegerField(verbose_name='Наш прибуток',
+                                          help_text='Відсоток кешбеку, який ми залишаємо собі. Обов\'язкове поле')
+    user_percent = models.IntegerField(verbose_name='Кешбкек клієнта',
+                                       help_text='Відсоток кешбеку, який отримає клієнт. Обов\'язкове поле')
+
+    # OTHER//
+    comment = models.CharField(max_length=1000, null=True, blank=True, verbose_name='Коментар для клієнта',
+                               help_text='Цей коментар побачить клієнт')
     description = models.CharField(max_length=1000, null=True, blank=True, verbose_name='Коментар для адміністраторів')
-    type = models.CharField(choices=PayoutTypeEnum, default='MINUS', null=False, verbose_name='Тип')
-    tag = models.CharField(choices=PayoutTagEnum, verbose_name='Джерело', default='edited')
+    type = models.CharField(choices=PayoutTypeEnum, default='MINUS', null=False, verbose_name='Тип операції')
+    tag = models.CharField(choices=PayoutTagEnum, verbose_name='Тип платежу', default='edited')
 
     def __str__(self):
-        return f'{"Списання" if self.type == "MINUS" else "Нарахування"} {self.price} грн. для ' \
-               f'{self.user.full_name} ({self.user.card})'
+        return f'{"-" if self.type == "MINUS" else "+"} {self.price} грн. для ' \
+               f'{self.user.full_name}'
 
     def save(self, *args, **kwargs):
+        self.general_price = round(self.general_percent / 100 * self.price)
+        self.service_price = round(self.service_percent / 100 * self.price)
+        user_price = round(self.user_percent / 100 * self.price)
+        self.user_price = user_price
         if not Payout.objects.filter(id=self.id):
             config = Config.from_env()
             bot = TeleBot(config.bot.token)
             action = 'Тобі було нараховано' if self.type == 'PLUS' else 'З тебе було списано'
             text = (
-                f'🔔 {action} {self.price} балів.\n\n'
+                f'🔔 {action} {self.user_price} балів.\n\n'
                 f'Перейдіть в розділ <b>{Buttons.menu.balance}</b>, '
                 f'щоб переглянути повну інформацію'
             )
@@ -183,12 +207,34 @@ class Payout(TimeBaseModel):
         balance = 0
         for payout in Payout.objects.filter(user_id=self.user.user_id):
             if payout.type == 'MINUS':
-                balance -= payout.price
+                balance -= payout.user_price
             else:
-                balance += payout.price
+                balance += payout.user_price
         self.user.balance = balance
         super(User, self.user).save()
         return save
+
+    def delete(self, *args, **kwargs):
+        config = Config.from_env()
+        bot = TeleBot(config.bot.token)
+        text = (
+            f'🔔 Ваш платіж {"+" if self.type == "PLUS" else "-"} {self.user_price} грн. був видалений адміністратором. '
+            f'Для уточення напишіть нам, в розділі <b>{Buttons.menu.help}</b>'
+        )
+        try:
+            bot.send_message(self.user.user_id, text, parse_mode='HTML')
+        except:
+            pass
+        delete = super(Payout, self).delete(*args, **kwargs)
+        balance = 0
+        for payout in Payout.objects.filter(user_id=self.user.user_id):
+            if payout.type == 'MINUS':
+                balance -= payout.user_price
+            else:
+                balance += payout.user_price
+        self.user.balance = balance
+        super(User, self.user).save()
+        return delete
 
 
 class BaseForm(ModelForm):

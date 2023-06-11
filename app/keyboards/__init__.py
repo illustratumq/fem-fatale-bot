@@ -4,6 +4,7 @@ class Back:
     partners: str = '◀ До партнерів'
     card: str = 'Повернутись до карти'
     menu: str = 'В головне меню'
+    media: str = '◀ Назад в медіа'
 
 
 class Partners:
@@ -26,6 +27,7 @@ class Admin:
     #  panel
     cancel_chat: str = 'Завершити діалог 💬'
     database: str = 'База даних 📗'
+    media: str = 'Медіа 🌠'
     database_clients: str = 'Клієнти 👥'
     database_partners: str = 'Партнери 🌉'
     search: str = 'Знайти клієнта 🔍'

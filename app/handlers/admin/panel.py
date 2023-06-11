@@ -3,7 +3,7 @@ from aiogram.dispatcher import FSMContext
 from aiogram.types import Message
 
 from app.config import Config
-from app.database.services.repos import UserRepo
+from app.database.services.repos import UserRepo, MediaRepo
 from app.filters import IsAdminFilter
 from app.keyboards import Buttons
 from app.keyboards.reply.menu import basic_kb
@@ -13,6 +13,7 @@ from app.states.states import AdminPanelSG
 async def admin_panel_cmd(msg: Message, state: FSMContext, config: Config):
     reply_markup = basic_kb([
         [Buttons.admin.database, Buttons.admin.search],
+        [Buttons.admin.media],
         [Buttons.back.menu]
     ])
     text = (
@@ -23,6 +24,37 @@ async def admin_panel_cmd(msg: Message, state: FSMContext, config: Config):
     await msg.answer(text, reply_markup=reply_markup)
     await state.finish()
 
+
+async def admin_media_cmd(msg: Message, media_db: MediaRepo, state: FSMContext):
+    medias = await media_db.get_all()
+    buttons = []
+    for media in medias[:5]:
+        buttons.append([media.name])
+    buttons.append([Buttons.admin.to_admin])
+    await msg.answer('Оберіть медіа зі списку, або введість номер медіа групи вручну',
+                     reply_markup=basic_kb(buttons))
+    await state.set_state(state='select_media')
+
+
+async def admin_media_viewer(msg: Message, media_db: MediaRepo, state: FSMContext):
+    key: str = msg.text
+    if key.isalnum():
+        media = await media_db.get_media(int(key))
+    else:
+        media = await media_db.get_media_name(key)
+    if not media:
+        await msg.answer('Не знайшов таку медіа групу, спробуйте ще раз')
+        return
+    reply_markup = basic_kb([
+        [Buttons.admin.to_admin],
+        [Buttons.back.media]
+    ])
+    if media.is_media_group():
+        await msg.answer('Обрана медіа група', reply_markup=reply_markup)
+        await msg.answer_media_group(media.get_media_group(media.name))
+    else:
+        await msg.answer_photo(media.files[0], media.name, reply_markup=reply_markup)
+    await state.finish()
 
 async def search_user_cmd(msg: Message, state: FSMContext):
     await msg.answer('Напишіть номер карти, телефону або ім\'я клієнта', reply_markup=basic_kb([Buttons.admin.to_admin]))
@@ -92,6 +124,9 @@ async def send_one_time_message(msg: Message, user_db: UserRepo, state: FSMConte
 def setup(dp: Dispatcher):
     dp.register_message_handler(
         admin_panel_cmd, IsAdminFilter(), text=(Buttons.menu.admin, Buttons.admin.to_admin), state='*')
+    dp.register_message_handler(
+        admin_media_cmd, IsAdminFilter(), text=(Buttons.admin.media, Buttons.back.media), state='*')
+    dp.register_message_handler(admin_media_viewer, IsAdminFilter(), state='select_media')
     dp.register_message_handler(search_user_cmd, IsAdminFilter(), text=Buttons.admin.search, state='*')
     dp.register_message_handler(check_input_data, IsAdminFilter(), state='search')
     dp.register_message_handler(one_time_message_panel_cmd, IsAdminFilter(), text=Buttons.admin.create_message,

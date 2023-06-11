@@ -28,7 +28,7 @@ async def process_media_group_cmd(msg: Message, media: list[Message], state: FSM
             else:
                 new_media.append(message.photo[-1].file_id)
         await msg.answer(f'Матеріали додано ({len(media)}). Зберігти /save')
-        await state.update_data(media=new_media)
+        await state.update_data(media=new_media, content_type=content_type)
     except:
         await msg.answer('Щоб додати групу фото або відео натисніть /add')
 
