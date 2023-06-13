@@ -16,7 +16,7 @@ async def partners_cmd(msg: Message, partner_db: PartnerRepo):
     categories_all = [partner.category for partner in await partner_db.get_all()]
     categories = list(set(categories_all))
     categories.sort(key=lambda c: categories_all.count(c), reverse=True)
-    await msg.answer('Будь ласка оберіть категорію закладів, які бажаєте переглянути',
+    await msg.answer('Будь-ласка обери категорію закладів, яку бажаєш переглянути',
                      reply_markup=basic_kb(chunk_list(categories, 2) + [[Buttons.menu.back]]))
     await PartnerSG.Categories.set()
 
@@ -27,13 +27,28 @@ async def save_category_name(msg: Message, partner_db: PartnerRepo, media_db: Me
         await state.update_data(category=msg.text)
         cities = list(set([partner.city for partner in partners]))
         if len(cities) > 1:
-            pass # TODO city
+            reply_markup = basic_kb([*[[city] for city in cities], [Buttons.back.categories]])
+            await msg.answer('Обери місто, в якому знаходиться заклад', reply_markup=reply_markup)
+            await PartnerSG.City.set()
         else:
             await state.update_data(city=cities[0], page=0)
             await partner_pagination_cmd(msg, partner_db, media_db, state)
     else:
-        await msg.answer('Такої категорії немає. Будь-ласка спробуйте ще раз')
+        await msg.answer('Такої категорії немає. Будь-ласка спробуй ще раз')
 
+
+async def pre_partner_pagination(msg: Message, partner_db: PartnerRepo, media_db: MediaRepo, state: FSMContext):
+    data = await state.get_data()
+    category = data['category']
+    partners = await partner_db.get_partners_category(category)
+    cities = list(set([partner.city for partner in partners]))
+    if msg.text in cities:
+        await state.update_data(city=msg.text, page=0)
+        await partner_pagination_cmd(msg, partner_db, media_db, state)
+    else:
+        reply_markup = basic_kb([*[[city] for city in cities], [Buttons.back.categories]])
+        await msg.answer('Упс, такого міста немає в нашому списку закладів, спробуй ще раз',
+                         reply_markup=reply_markup)
 
 async def partner_pagination_cmd(msg: Message, partner_db: PartnerRepo, media_db: MediaRepo, state: FSMContext):
     data = await state.get_data()
@@ -100,6 +115,7 @@ async def partner_view_cmd(msg: Message, partner: PartnerRepo.model, media_db: M
 def setup(dp: Dispatcher):
     dp.register_message_handler(partners_cmd, text=(Buttons.menu.partners, Buttons.back.categories), state='*')
     dp.register_message_handler(save_category_name, state=PartnerSG.Categories)
+    dp.register_message_handler(pre_partner_pagination, state=PartnerSG.City)
     dp.register_message_handler(partner_pagination_cmd, state=PartnerSG.Pagination)
 
 

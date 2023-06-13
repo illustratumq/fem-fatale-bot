@@ -8,6 +8,7 @@ class AuthSG(StatesGroup):
 
 class PartnerSG(StatesGroup):
     Categories = State()
+    City = State()
     Pagination = State()
 
 
