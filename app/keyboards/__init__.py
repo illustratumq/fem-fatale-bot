@@ -5,6 +5,7 @@ class Back:
     card: str = 'Повернутись до карти'
     menu: str = 'В головне меню'
     media: str = '◀ Назад в медіа'
+    info: str = '◀ До інформації'
 
 
 class Partners:
@@ -64,6 +65,10 @@ class Menu:
     skipping: str = 'Пропустити'
     back: str = '◀ Назад'
     introduction: str = 'Зрозуміло 👌'
+    rules: str = 'Правила сервісу'
+    about_us: str = 'Про нас'
+    how_it_work: str = 'Як це працює'
+    about_bot: str = 'Про бота'
 
 
 class Buttons:
