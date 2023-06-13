@@ -46,8 +46,8 @@ class PayoutAdmin(admin.ModelAdmin):
 
     form = BaseForm
 
-    list_display = ('__str__', 'price', 'user', 'updated_at')
-    list_filter = ('type', 'tag')
+    list_display = ('__str__', 'price', 'user', 'tag', 'payout_date')
+    list_filter = ('type', 'tag', 'payout_date')
     search_fields = ("user_id__startswith",)
     ordering = ['-updated_at', '-tag']
     autocomplete_fields = ('user', 'media', 'partner')

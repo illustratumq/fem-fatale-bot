@@ -3,7 +3,6 @@ from datetime import datetime
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
-# Create your models here.
 from django.forms import Textarea, ModelForm
 
 from app.config import Config
@@ -151,7 +150,7 @@ class Payout(TimeBaseModel):
     )
 
     id = models.BigAutoField(primary_key=True)
-    payout_date = models.DateTimeField(verbose_name='Дата отримання чеку', default=datetime.now())
+    payout_date = models.DateTimeField(verbose_name='Дата чеку', default=datetime.now())
     media = models.ForeignKey(Media,  on_delete=models.SET_NULL, verbose_name='Фото чеку', null=True, blank=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='Клієнт', null=False)
     partner = models.ForeignKey(Partner, on_delete=models.SET_NULL, verbose_name='Заклад', null=True, blank=True)
@@ -174,7 +173,7 @@ class Payout(TimeBaseModel):
     user_percent = models.IntegerField(verbose_name='Кешбкек клієнта',
                                        help_text='Відсоток кешбеку, який отримає клієнт. Обов\'язкове поле')
 
-    # OTHER//
+    # OTHER
     comment = models.CharField(max_length=1000, null=True, blank=True, verbose_name='Коментар для клієнта',
                                help_text='Цей коментар побачить клієнт')
     description = models.CharField(max_length=1000, null=True, blank=True, verbose_name='Коментар для адміністраторів')
@@ -182,8 +181,11 @@ class Payout(TimeBaseModel):
     tag = models.CharField(choices=PayoutTagEnum, verbose_name='Тип платежу', default='edited')
 
     def __str__(self):
-        return f'{"-" if self.type == "MINUS" else "+"} {self.price} грн. для ' \
-               f'{self.user.full_name}'
+        return (
+            f'{"-" if self.type == "MINUS" else "+"}'
+            f'{self.user_price if self.tag == "edited" else self.price} грн. для '  
+            f'{self.user.full_name}'
+        )
 
     def save(self, *args, **kwargs):
         self.general_price = round(self.general_percent / 100 * self.price)
@@ -207,9 +209,9 @@ class Payout(TimeBaseModel):
         balance = 0
         for payout in Payout.objects.filter(user_id=self.user.user_id):
             if payout.type == 'MINUS':
-                balance -= payout.user_price
+                balance -= payout.user_price if payout.tag == 'edited' else payout.price
             else:
-                balance += payout.user_price
+                balance += payout.user_price if payout.tag == 'edited' else payout.price
         self.user.balance = balance
         super(User, self.user).save()
         return save
@@ -229,9 +231,9 @@ class Payout(TimeBaseModel):
         balance = 0
         for payout in Payout.objects.filter(user_id=self.user.user_id):
             if payout.type == 'MINUS':
-                balance -= payout.user_price
+                balance -= payout.user_price if payout.tag == 'edited' else payout.price
             else:
-                balance += payout.user_price
+                balance += payout.user_price if payout.tag == 'edited' else payout.price
         self.user.balance = balance
         super(User, self.user).save()
         return delete
