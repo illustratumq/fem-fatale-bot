@@ -17,11 +17,9 @@ class DatabaseMiddleware(LifetimeControllerMiddleware):
     async def pre_process(self, obj: TelegramObject, data: dict, *args: Any):
         session: AsyncSession = self.session_pool()
         data['session'] = session
-        data['db'] = DatabaseRepo(session)
         data['user_db'] = UserRepo(session)
         data['partner_db'] = PartnerRepo(session)
         data['article_db'] = ArticleRepo(session)
-        data['chat_db'] = ChatRepo(session)
         data['event_db'] = EventRepo(session)
         data['media_db'] = MediaRepo(session)
         data['payout_db'] = PayoutRepo(session)

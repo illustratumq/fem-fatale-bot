@@ -60,25 +60,6 @@ class PartnerRepo(BaseRepo[Partner]):
         return await self.update(self.model.id == partner_id, **kwargs)
 
 
-class ChatRepo(BaseRepo[Chat]):
-    model = Chat
-
-    async def get_chat(self, chat_id: int) -> Chat:
-        return await self.get_one(self.model.chat_id == chat_id)
-
-    async def get_chat_user(self, user_id: int) -> Chat:
-        return await self.get_one(self.model.user_id == user_id, self.model.active == True)
-
-    async def get_chat_admin(self, admin_id: int) -> Chat:
-        return await self.get_one(self.model.admin_id == admin_id, self.model.active == True)
-
-    async def update_chat(self, chat_id: int, **kwargs) -> None:
-        return await self.update(self.model.chat_id == chat_id, **kwargs)
-
-    async def delete_chat(self, chat_id: int):
-        return await self.delete(self.model.chat_id == chat_id)
-
-
 class ArticleRepo(BaseRepo[Article]):
     model = Article
 
@@ -145,28 +126,3 @@ class PayoutRepo(BaseRepo[Payout]):
     async def delete_payout(self, payout_id: int):
         return await self.delete(self.model.id == payout_id)
 
-
-class DatabaseRepo:
-
-    def __init__(self, session: AsyncSession):
-        self.session = session
-
-    @property
-    def user_db(self):
-        return UserRepo(self.session)
-
-    @property
-    def partner_db(self):
-        return PartnerRepo(self.session)
-
-    @property
-    def chat_db(self):
-        return ChatRepo(self.session)
-
-    @property
-    def event_db(self):
-        return EventRepo(self.session)
-
-    @property
-    def media_db(self):
-        return MediaRepo(self.session)

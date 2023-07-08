@@ -127,7 +127,6 @@ async def event_processing_cmd(msg: Message, user_db: UserRepo, event_db: EventR
     text = event.create_for_admin_text(user) + f'\n\n🌍 <a href="{url}">Перейти в адмін панель</a>'
     await event.make_message(msg.bot, config, event_db, user, admin)
     buttons = [
-        [Buttons.admin.create_message], [Buttons.admin.create_chat],
         [Buttons.admin.make_done],
         [Buttons.admin.cancel]
     ]
