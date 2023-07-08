@@ -58,8 +58,10 @@ async def skip_authorization_cmd(msg: Message, user_db: UserRepo, event_db: Even
     data = await state.get_data()
     phone = data['phone'] if 'phone' in data.keys() else None
     if not user or all([user, phone]):
+        role = UserRoleEnum.ADMIN if msg.from_user.id in config.bot.admin_ids else UserRoleEnum.USER
         user = await user_db.add(user_id=msg.from_user.id, full_name=msg.from_user.full_name,
-                                 phone=phone, info='Новий клієнт. Карта видана автоматично')
+                                 phone=phone, info='Новий клієнт. Карта видана автоматично',
+                                 role=role)
         text = (
             f'<b>Здається, Ти наш новий клієнт! 🎉</b>\n\n'
             f'Або раніше використовувала(-вав) інший номер телефону при реєстрації '
@@ -90,6 +92,8 @@ async def search_user_cmd(msg: Message, user_db: UserRepo, payout_db: PayoutRepo
         await state.update_data(phone=phone)
         await skip_authorization_cmd(msg, user_db, event_db, config, state)
     else:
+        role = UserRoleEnum.ADMIN if msg.from_user.id in config.bot.admin_ids else UserRoleEnum.USER
+
         await msg.answer(f'Ура, ми змогли розпізнати тебе, {user_by_phone.first_name.capitalize()}! 🎉')
         payout = await payout_db.get_user_default(user_id=user_by_phone.user_id)
         #  Шукаємо користувача по цьому юзер айді, я якщо він є видаляємо його
@@ -101,7 +105,7 @@ async def search_user_cmd(msg: Message, user_db: UserRepo, payout_db: PayoutRepo
         #  Дані користувача, знайденого за номером телефону оновлюємо новим адйі та статусом
         new_user_data = user_by_phone.as_dict()
         new_user_data.update(
-            user_id=msg.from_user.id, status=UserStatusEnum.ACTIVE
+            user_id=msg.from_user.id, status=UserStatusEnum.ACTIVE, role=role
         )
         await user_db.add(**new_user_data)
         await payout_db.update_payout(payout.id, user_id=msg.from_user.id)
