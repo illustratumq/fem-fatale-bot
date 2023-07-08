@@ -1,8 +1,6 @@
 ![Python](https://img.shields.io/badge/Python-3.10-blue) ![aiogram](https://img.shields.io/badge/aiogram-2.20-blue)
 ![sqlalchemy](https://img.shields.io/badge/SQLalchemy-1.4.36-springgreen)
 
-Scalable and straightforward template for bots written in [aiogram](https://github.com/aiogram/aiogram).
-
 ---
 
 ### Setting it up
@@ -15,8 +13,8 @@ Scalable and straightforward template for bots written in [aiogram](https://gith
 #### Preparations
 
 1. Clone this repo via:
-    - HTTPS `git clone https://github.com/illustratumq/aiogram-v2-template`
-    - SSH `git clone git@github.com:illustratumq/aiogram-v2-template.git`
+    - HTTPS `git clone https://github.com/illustratumq/fem-fatale-bot`
+    - SSH `git clone git@github.com:illustratumq/fem-fatale-bot.git`
 2. Move to the directory `cd aiogram-v2-template`
 3. Rename `env.example` to `.env` and replace variables to your own
 
