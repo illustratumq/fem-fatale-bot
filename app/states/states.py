@@ -3,6 +3,7 @@ from app.states.base import *
 
 class AuthSG(StatesGroup):
     Introduction = State()
+    HelpGuide = State()
     Phone = State()
 
 

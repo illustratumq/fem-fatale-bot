@@ -9,7 +9,7 @@ async def info_select_cmd(msg: Message):
         'Дізнайся про нас більше! Обери, що тебе цікавить',
         reply_markup=basic_kb([
              [Buttons.menu.rules, Buttons.menu.how_it_work],
-             [Buttons.menu.about_us, Buttons.menu.about_bot],
+             [Buttons.menu.about_us],
              [Buttons.menu.back]
          ])
     )
@@ -65,5 +65,5 @@ def setup(dp: Dispatcher):
     dp.register_message_handler(info_select_cmd, text=(Buttons.menu.about, Buttons.back.info), state='*')
     dp.register_message_handler(info_how_it_works_cmd, text=Buttons.menu.how_it_work, state='*')
     dp.register_message_handler(info_about_us_cmd, text=Buttons.menu.about_us, state='*')
-    dp.register_message_handler(info_developer_cmd, text=Buttons.menu.about_bot, state='*')
+    # dp.register_message_handler(info_developer_cmd, text=Buttons.menu.about_bot, state='*')
     dp.register_message_handler(info_rules_cmd, text=Buttons.menu.rules, state='*')

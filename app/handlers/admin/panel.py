@@ -3,7 +3,7 @@ from aiogram.dispatcher import FSMContext
 from aiogram.types import Message
 
 from app.config import Config
-from app.database.services.repos import UserRepo, MediaRepo
+from app.database.services.repos import UserRepo, MediaRepo, ChatRepo
 from app.filters import IsAdminFilter
 from app.keyboards import Buttons
 from app.keyboards.reply.menu import basic_kb
@@ -61,7 +61,7 @@ async def search_user_cmd(msg: Message, state: FSMContext):
     await state.set_state(state='search')
 
 
-async def check_input_data(msg: Message, user_db: UserRepo, state: FSMContext):
+async def check_input_data(msg: Message, user_db: UserRepo, chat_db: ChatRepo, state: FSMContext):
     search_funcs = [
         user_db.get_user_card,
         user_db.get_user_name
@@ -71,54 +71,14 @@ async def check_input_data(msg: Message, user_db: UserRepo, state: FSMContext):
     for search_func in search_funcs:
         user = await search_func(msg.text)
         if user:
-            await msg.answer(user.user_info_text(), reply_markup=basic_kb([
-                [Buttons.admin.create_message],
-                [Buttons.admin.create_chat],
-                [Buttons.admin.to_admin]
-            ]))
+            chat = await chat_db.get_chat_user(user.user_id)
+            text = (
+                f'{user.user_info_text()}\n\n'
+                f'Чат: {chat.invite_link}'
+            )
+            await msg.answer(text, reply_markup=basic_kb([Buttons.admin.to_admin]))
             await state.update_data(user_id=user.user_id)
             await state.set_state(state='select_action')
-
-
-async def one_time_message_panel_cmd(msg: Message, user_db: UserRepo, state: FSMContext):
-    data = await state.get_data()
-    user = await user_db.get_user(data['user_id'])
-    text = (
-        'Разове повідомлення довзоляє користувачу отримати необхідну інформацію одним повідомленням, '
-        'а Адміністратору - відповісти клієнту без створення чату!\n\n'
-        f'Будь-ласка напишіть свою відповідь для {user.get_mentioned()}'
-    )
-    await msg.answer(text, reply_markup=basic_kb([Buttons.admin.back]))
-    await AdminPanelSG.OneTimeMessage.set()
-
-
-async def save_one_time_message(msg: Message, state: FSMContext):
-    await state.update_data(admin_answer=msg.html_text)
-    text = (
-        'Повідомлення успішно записано, якщо бажаєте змінити його вміст, '
-        'відправт відредагований текст просто зараз.\n\n'
-        'Якщо все вірно - підтвердіть відправку повідомлення'
-    )
-    await msg.reply(text, reply_markup=basic_kb([[Buttons.admin.create_message], [Buttons.admin.back]]))
-    await AdminPanelSG.Confirm.set()
-
-
-async def send_one_time_message(msg: Message, user_db: UserRepo, state: FSMContext):
-    data = await state.get_data()
-    text = (
-        f'Адміністратор ФемФаталь написав повідомлення:\n\n'
-        f'<i>{data["admin_answer"]}</i>'
-    )
-    user = await user_db.get_user(data['user_id'])
-    await msg.bot.send_message(data['user_id'], text=text)
-    await msg.answer('Повідомлення успішно відправлено')
-    await msg.answer(user.user_info_text(), reply_markup=basic_kb([
-        [Buttons.admin.create_message],
-        [Buttons.admin.create_chat],
-        [Buttons.admin.to_admin]
-    ]))
-    await state.update_data(user_id=user.user_id)
-    await state.set_state(state='select_action')
 
 
 def setup(dp: Dispatcher):
@@ -129,8 +89,3 @@ def setup(dp: Dispatcher):
     dp.register_message_handler(admin_media_viewer, IsAdminFilter(), state='select_media')
     dp.register_message_handler(search_user_cmd, IsAdminFilter(), text=Buttons.admin.search, state='*')
     dp.register_message_handler(check_input_data, IsAdminFilter(), state='search')
-    dp.register_message_handler(one_time_message_panel_cmd, IsAdminFilter(), text=Buttons.admin.create_message,
-                                state='select_action')
-    dp.register_message_handler(save_one_time_message, IsAdminFilter(), state=AdminPanelSG.OneTimeMessage)
-    dp.register_message_handler(send_one_time_message, IsAdminFilter(), state=AdminPanelSG.Confirm,
-                                text=Buttons.admin.create_message)

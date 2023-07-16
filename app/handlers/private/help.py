@@ -2,27 +2,25 @@ from aiogram import Dispatcher
 from aiogram.dispatcher import FSMContext
 from aiogram.types import Message
 
-from app.config import Config
 from app.database.services.enums import EventTypeEnum
-from app.database.services.repos import UserRepo, EventRepo
+from app.database.services.repos import UserRepo, ChatRepo
 from app.keyboards import Buttons
 from app.keyboards.reply.menu import basic_kb, menu_kb
 
 
 async def help_cmd(msg: Message, state: FSMContext):
     text = (
-        'Будь-ласка напиши своє питання або проблему в одному повідомленні'
+        'Будь-ласка напиши своє питання або проблему'
     )
     await msg.answer(text, reply_markup=basic_kb([Buttons.menu.back]))
     await state.set_state(state='help')
 
 
-async def save_user_help(msg: Message, user_db: UserRepo, event_db: EventRepo, state: FSMContext,
-                         config: Config):
-    user = await user_db.get_user(msg.from_user.id)
+async def save_user_help(msg: Message, state: FSMContext,
+                         chat_db: ChatRepo):
     description = msg.text
-    event = await event_db.add(user_id=msg.from_user.id, type=EventTypeEnum.HELP, description=description)
-    await event.make_message(msg.bot, config, event_db, user)
+    chat = await chat_db.get_chat_user(msg.from_user.id)
+    await chat.create_event_message(msg.bot, EventTypeEnum.HELP, description)
     await msg.answer('Твій запит надіслано! Очікуй на відповідь від адміністрації!', reply_markup=menu_kb())
     await state.finish()
 

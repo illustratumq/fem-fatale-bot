@@ -4,12 +4,14 @@ from aiogram.types import Message
 
 from app.config import Config
 from app.database.services.enums import EventTypeEnum
-from app.database.services.repos import UserRepo, EventRepo, PartnerRepo
+from app.database.services.repos import UserRepo, PartnerRepo, ChatRepo
 from app.keyboards.reply.menu import basic_kb, Buttons, menu_kb
 
 
-async def reserv_cmd(msg: Message, user_db: UserRepo, partner_db: PartnerRepo, state: FSMContext):
+async def reserv_cmd(msg: Message, user_db: UserRepo, partner_db: PartnerRepo, chat_db: ChatRepo, state: FSMContext):
     user = await user_db.get_user(msg.from_user.id)
+    chat = await chat_db.get_chat_user(msg.from_user.id)
+    await chat.create_action_message(msg.bot, Buttons.menu.reserv)
     if not user.is_authorized:
         text = (
             '📲 Для того щоб отримати кешбек, потрібно пройти авторизацію!\n\n'
@@ -37,16 +39,15 @@ async def reserv_cmd(msg: Message, user_db: UserRepo, partner_db: PartnerRepo, s
         await state.set_state(state='reserv')
 
 
-async def save_user_comment(msg: Message, user_db: UserRepo, event_db: EventRepo, state: FSMContext,
-                            config: Config, partner_db: PartnerRepo):
+async def save_user_comment(msg: Message, user_db: UserRepo, state: FSMContext,
+                            config: Config, partner_db: PartnerRepo, chat_db: ChatRepo):
     data = await state.get_data()
     description = msg.text
     if 'partner_id' in data.keys():
         partner = await partner_db.get_partner(data['partner_id'])
         description = f'Заклад {partner.name}. {description}'
-    user = await user_db.get_user(msg.from_user.id)
-    event = await event_db.add(user_id=msg.from_user.id, type=EventTypeEnum.RESERV, description=description)
-    await event.make_message(msg.bot, config, event_db, user)
+    chat = await chat_db.get_chat_user(msg.from_user.id)
+    await chat.create_event_message(msg.bot, EventTypeEnum.RESERV, description)
     await msg.answer('Твій запит надіслано! Очікуй на відповідь від адміністрації!', reply_markup=menu_kb())
     await state.finish()
 

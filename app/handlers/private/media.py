@@ -10,6 +10,7 @@ from app.filters import IsAdminFilter
 async def add_media_cmd(msg: Message, state: FSMContext):
     await state.update_data(media=[])
     await msg.answer('Додайте або перешліть усі медіа-файли, і натисніть /save')
+    await state.set_state(state='media')
 
 
 async def process_media_group_cmd(msg: Message, media: list[Message], state: FSMContext):
@@ -60,19 +61,21 @@ async def save_media_cmd(msg: Message, media_db: MediaRepo, state: FSMContext):
         name = f'Медіа група №{media.id}'
         await media_db.update_media(media.id, name=name)
         await msg.answer(f'Успішно завантажено {len(data["media"])} медіа-файлів. Назва пакунку: <b>{name}</b>')
+        await state.finish()
     else:
         await msg.answer('Упс, щось пішло не так. Немає медіа для зберігання')
     del data['media']
     del data['content_type']
     await state.set_data(data)
+    await state.finish()
 
 def setup(dp: Dispatcher):
     dp.register_message_handler(add_media_cmd, IsAdminFilter(), Command('add'), state='*')
     dp.register_message_handler(
         process_media_group_cmd, IsAdminFilter(), MediaGroupFilter(True), content_types=ContentTypes.PHOTO,
-        state='*')
+        state='media')
     dp.register_message_handler(
         process_media_cmd, IsAdminFilter(), MediaGroupFilter(False), content_types=ContentTypes.PHOTO,
-        state='*')
-    dp.register_message_handler(save_media_cmd, IsAdminFilter(), Command('save'), state='*')
+        state='media')
+    dp.register_message_handler(save_media_cmd, IsAdminFilter(), Command('save'), state='media')
 

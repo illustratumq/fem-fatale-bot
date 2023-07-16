@@ -2,16 +2,17 @@ from aiogram import Dispatcher
 from aiogram.dispatcher import FSMContext
 from aiogram.types import Message
 
-from app.config import Config
 from app.database.services.enums import EventTypeEnum
-from app.database.services.repos import UserRepo, EventRepo
+from app.database.services.repos import UserRepo, ChatRepo
 from app.keyboards import Buttons
 from app.keyboards.reply.menu import basic_kb, menu_kb
 from app.states.states import PayoutSG
 
 
-async def payout_cmd(msg: Message, user_db: UserRepo):
+async def payout_cmd(msg: Message, user_db: UserRepo, chat_db: ChatRepo):
+    chat = await chat_db.get_chat_user(msg.from_user.id)
     user = await user_db.get_user(msg.from_user.id)
+    await chat.create_action_message(msg.bot, Buttons.menu.cashback)
     if not user.is_authorized:
         text = (
             '📲 Для того щоб отримати кешбек, потрібно пройти авторизацію!\n\n'
@@ -50,19 +51,16 @@ async def user_comment_enter(msg: Message):
     await PayoutSG.Comment.set()
 
 
-async def save_comment(msg: Message, user_db: UserRepo, event_db: EventRepo, state: FSMContext,
-                       config: Config):
+async def save_comment(msg: Message, state: FSMContext, chat_db: ChatRepo):
     await state.update_data(comment=msg.text)
-    await save_and_send_event(msg, user_db, event_db, state, config)
+    await save_and_send_event(msg, chat_db, state)
 
 
-async def save_and_send_event(msg: Message, user_db: UserRepo, event_db: EventRepo, state: FSMContext,
-                              config: Config):
+async def save_and_send_event(msg: Message, chat_db: ChatRepo, state: FSMContext):
     data = await state.get_data()
-    user = await user_db.get_user(msg.from_user.id)
     description = data['comment'] if 'comment' in data.keys() else 'Користувач не залишив кометар'
-    event = await event_db.add(user_id=msg.from_user.id, type=EventTypeEnum.PAYOUT, description=description)
-    await event.make_message(msg.bot, config, event_db, user)
+    chat = await chat_db.get_chat_user(msg.from_user.id)
+    await chat.create_event_message(msg.bot, EventTypeEnum.PAYOUT, description)
     await msg.answer('Твій запит надіслано! Очікуй на відповідь від адміністрації!', reply_markup=menu_kb())
     await state.finish()
 

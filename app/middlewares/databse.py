@@ -19,8 +19,8 @@ class DatabaseMiddleware(LifetimeControllerMiddleware):
         data['session'] = session
         data['user_db'] = UserRepo(session)
         data['partner_db'] = PartnerRepo(session)
+        data['chat_db'] = ChatRepo(session)
         data['article_db'] = ArticleRepo(session)
-        data['event_db'] = EventRepo(session)
         data['media_db'] = MediaRepo(session)
         data['payout_db'] = PayoutRepo(session)
 

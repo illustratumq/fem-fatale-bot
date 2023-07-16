@@ -22,9 +22,9 @@ def menu_kb(authorized: bool = True, admin: bool = False):
     return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=keyboard)
 
 
-def introduction_kb():
+def introduction_kb(version_two: bool = False):
     keyboard = [
-        [KeyboardButton(Buttons.menu.introduction)]
+        [KeyboardButton(Buttons.menu.introduction if not version_two else Buttons.menu.introduction_2)]
     ]
     return ReplyKeyboardMarkup(resize_keyboard=True, keyboard=keyboard)
 

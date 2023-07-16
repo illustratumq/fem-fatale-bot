@@ -65,11 +65,12 @@ class Menu:
     skipping: str = 'Пропустити'
     back: str = '◀ Назад'
     introduction: str = 'Зрозуміло 👌'
+    introduction_2: str = 'Дякую за підсказку 👍'
     rules: str = 'Правила сервісу'
     about_us: str = 'Про нас'
     how_it_work: str = 'Як це працює'
     about_bot: str = 'Про бота'
-
+    dialog: str = '📩 Зв\'язатись з нами'
 
 class Buttons:
     menu = Menu()

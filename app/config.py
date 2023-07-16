@@ -33,6 +33,13 @@ class DbConfig:
 
 
 @dataclass
+class UserBot:
+    api_id: str
+    api_hash: str
+    session_name: str
+
+
+@dataclass
 class RedisConfig:
     host: str
     port: int
@@ -55,6 +62,7 @@ class Config:
     db: DbConfig
     redis: RedisConfig
     misc: Miscellaneous
+    userbot: UserBot
 
     @classmethod
     def from_env(cls, path: str = None) -> 'Config':
@@ -87,5 +95,10 @@ class Config:
                 django_login=env.str('DJANGO_LOGIN', 'admin'),
                 django_password=env.str('DJANGO_PASSWORD', 'Admin!'),
                 server_host_ip=env.str('SERVER_HOST_IP')
+            ),
+            userbot=UserBot(
+                api_id=env.str('USERBOT_API_ID', None),
+                api_hash=env.str('USERBOT_API_HASH', None),
+                session_name=env.str('USERBOT_SESSION_NAME', 'userbot'),
             )
         )

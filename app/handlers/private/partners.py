@@ -34,7 +34,8 @@ async def save_category_name(msg: Message, partner_db: PartnerRepo, media_db: Me
             await state.update_data(city=cities[0], page=0)
             await partner_pagination_cmd(msg, partner_db, media_db, state)
     else:
-        await msg.answer('Такої категорії немає. Будь-ласка спробуй ще раз')
+        await msg.answer('Такої категорії немає. Будь-ласка спробуй ще раз',
+                         reply_markup=basic_kb([[Buttons.menu.dialog], [Buttons.menu.back]]))
 
 
 async def pre_partner_pagination(msg: Message, partner_db: PartnerRepo, media_db: MediaRepo, state: FSMContext):

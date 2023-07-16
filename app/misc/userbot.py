@@ -1,3 +1,4 @@
+import logging
 import os
 from datetime import timedelta
 
@@ -5,22 +6,25 @@ from pyrogram import Client
 from pyrogram.errors import ChatIdInvalid
 from pyrogram.raw.core import TLObject
 from pyrogram.raw.functions.messages import EditChatAdmin, DeleteChat
-from pyrogram.raw.types import ChatAdminRights
 from pyrogram.types import Chat, ChatInviteLink, ChatPermissions, ChatMember
 
-from app.config import UserBot
-from app.misc.media import make_chat_photo_template
+from app.config import Config
+from app.misc.photo import make_chat_photo
 from app.misc.times import now
 
 
+log = logging.getLogger(__name__)
+
+
 class UserbotController:
-    def __init__(self, config: UserBot, bot_username: str, chat_photo_path: str):
+    def __init__(self, config: Config, bot_username: str):
         try:
-            self._client = Client(config.session_name, no_updates=True)
+            self._client = Client(config.userbot.session_name, no_updates=True)
         except AttributeError:
-            self._client = Client(config.session_name, config.api_id, config.api_hash, no_updates=True)
+            self._client = Client(config.userbot.session_name, config.userbot.api_id, config.userbot.api_hash,
+                                  no_updates=True)
         self._bot_username = bot_username
-        self._chat_photo_path = chat_photo_path
+        self.config = config
 
     async def get_client_user_id(self) -> int:
         async with self._client:
@@ -42,20 +46,23 @@ class UserbotController:
                 members.append(member.user.id)
         return members
 
-    async def create_new_room(self, last_room_number: int) -> tuple[Chat, ChatInviteLink, str]:
+    async def create_new_room(self, room_name: str) -> tuple[Chat, ChatInviteLink]:
         async with self._client as client:
-            chat, room_name = await self._create_group(client, last_room_number)
-            await self._set_chat_photo(chat, last_room_number)
+            chat = await self._create_group(client, room_name)
+            await self._set_chat_photo(chat, room_name)
             await self._set_chat_permissions(client, chat)
             await self._set_bot_admin(client, chat)
+            for admin_id in self.config.bot.admin_ids:
+                try:
+                    await self.add_chat_member(chat.id, admin_id)
+                except Exception as error:
+                    log.error(error)
             invite_link = await self._create_invite_link(client, chat)
-        return chat, invite_link, room_name
+        return chat, invite_link
 
-    async def _create_group(self, client: Client, last_room_number: int) -> tuple[Chat, str]:
-        new_room_number = last_room_number + 1
-        name = f'Чат №{new_room_number}'
-        group = await client.create_group(name, [self._bot_username])
-        return group, name
+    async def _create_group(self, client: Client, room_name: str) -> Chat:
+        group = await client.create_group(room_name, [self._bot_username])
+        return group
 
     @staticmethod
     async def _set_chat_permissions(client: Client, chat: Chat) -> None:
@@ -67,16 +74,8 @@ class UserbotController:
         await client.set_chat_permissions(chat.id, permissions)
 
     @staticmethod
-    async def _set_chat_admin_rights(client: Client, chat: Chat):
-        rights = ChatAdminRights(
-            change_info=False, post_messages=True, edit_messages=True,
-            delete_messages=True, ban_users=True, invite_users=True, pin_messages=True,
-            add_admins=True, anonymous=True
-        )
-
-    @staticmethod
-    async def _set_chat_photo(chat: Chat, last_room_number: int) -> None:
-        new_photo_path = make_chat_photo_template(last_room_number + 1)
+    async def _set_chat_photo(chat: Chat, room_name: str) -> None:
+        new_photo_path = make_chat_photo(room_name)
         await chat.set_photo(photo=new_photo_path)
         os.remove(new_photo_path)
 

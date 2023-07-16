@@ -12,6 +12,7 @@ from app.config import Config
 from app.database.excel.partners.controller import ExcelPartnerController
 from app.database.excel.users.controller import ExcelUserController
 from app.database.services.db_engine import create_db_engine_and_session_pool
+from app.misc.userbot import UserbotController
 
 log = logging.getLogger(__name__)
 
@@ -32,21 +33,22 @@ async def main():
     db_engine, sqlalchemy_session_pool = await create_db_engine_and_session_pool(
         config.db.sqlalchemy_url
     )
+    userbot = UserbotController(config, (await bot.me).username)
 
-    environments = dict(bot=bot, config=config, dp=dp)
+    environments = dict(bot=bot, config=config, dp=dp, userbot=userbot)
 
     middlewares.setup(dp, sqlalchemy_session_pool, environments)
     handlers.setup(dp)
 
     allowed_updates = (
-        AllowedUpdates.MESSAGE + AllowedUpdates.CALLBACK_QUERY
+        AllowedUpdates.MESSAGE + AllowedUpdates.CALLBACK_QUERY + AllowedUpdates.CHAT_JOIN_REQUEST
     )
 
-    if config.misc.reset_db:
-        await setup_excel_data(sqlalchemy_session_pool)
+    # if config.misc.reset_db:
+    #     await setup_excel_data(sqlalchemy_session_pool)
 
     try:
-        await dp.skip_updates()
+        # await dp.skip_updates()
         await dp.start_polling(allowed_updates=allowed_updates, reset_webhook=True)
     finally:
         await storage.close()
