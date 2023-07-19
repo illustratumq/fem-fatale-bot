@@ -52,9 +52,9 @@ class UserbotController:
             await self._set_chat_photo(chat, room_name)
             await self._set_chat_permissions(client, chat)
             await self._set_bot_admin(client, chat)
-            for admin_id in self.config.bot.admin_ids:
+            for admin_id in self.config.misc.chat_admin_ids:
                 try:
-                    await self.add_chat_member(chat.id, admin_id)
+                    await self.add_chat_member(client, chat.id, admin_id)
                 except Exception as error:
                     log.error(error)
             invite_link = await self._create_invite_link(client, chat)
@@ -95,10 +95,9 @@ class UserbotController:
             raw.chat_id = -chat.id
             await self._invoke(client, raw)
 
-    async def add_chat_member(self, chat_id: int, user_id: int):
-        async with self._client as client:
-            client: Client
-            await client.add_chat_members(chat_id=chat_id, user_ids=user_id)
+    @staticmethod
+    async def add_chat_member(client: Client, chat_id: int, user_id: int):
+        await client.add_chat_members(chat_id=chat_id, user_ids=user_id)
 
     async def kick_chat_member(self, chat_id: int, user_id: int):
         async with self._client as client:

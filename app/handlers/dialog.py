@@ -1,6 +1,8 @@
+import aiogram
 from aiogram import Dispatcher
 from aiogram.dispatcher.filters import ChatTypeFilter
 from aiogram.types import Message, ContentTypes, ChatType, ChatJoinRequest
+from aiogram.utils.exceptions import BotBlocked
 
 from app.config import Config
 from app.database.services.enums import UserRoleEnum
@@ -17,19 +19,23 @@ async def dialog_from_user_cmd(msg: Message, chat_db: ChatRepo, config: Config):
 
 async def dialog_from_admin_cmd(msg: Message, chat_db: ChatRepo, user_db: UserRepo):
     if not msg.from_user.is_bot:
-        chat = await chat_db.get_chat(msg.chat.id)
-        admin = await user_db.get_user(msg.from_user.id)
-        if admin:
-            if admin.role == UserRoleEnum.ADMIN:
-                await msg.bot.copy_message(
-                    chat_id=chat.user_id, from_chat_id=msg.chat.id, message_id=msg.message_id,
-                    # reply_markup=basic_kb([Buttons.menu.back])
-                )
+        try:
+            chat = await chat_db.get_chat(msg.chat.id)
+            admin = await user_db.get_user(msg.from_user.id)
+            if admin:
+                if admin.role == UserRoleEnum.ADMIN:
+                    await msg.bot.copy_message(
+                        chat_id=chat.user_id, from_chat_id=msg.chat.id, message_id=msg.message_id,
+                        # reply_markup=basic_kb([Buttons.menu.back])
+                    )
+                else:
+                    await msg.reply('Упс... Схоже ви не є адміністратором')
             else:
-                await msg.reply('Упс... Схоже ви не є адміністратором')
-        else:
-            await msg.reply(f'Упс... {msg.from_user.full_name}, '
-                            f'ви ще не зареєстровані в боті. Зробіть це зараз: @{(await msg.bot.me).username}')
+                await msg.reply(f'Упс... {msg.from_user.full_name}, '
+                                f'ви ще не зареєстровані в боті. Зробіть це зараз: @{(await msg.bot.me).username}')
+        except BotBlocked:
+            await msg.answer('Клієнт видалив чат з ботом')
+
 
 
 async def process_chat_join_request(cjr: ChatJoinRequest, user_db: UserRepo):

@@ -47,7 +47,7 @@ async def pre_partner_pagination(msg: Message, partner_db: PartnerRepo, media_db
         await state.update_data(city=msg.text, page=0)
         await partner_pagination_cmd(msg, partner_db, media_db, state)
     else:
-        reply_markup = basic_kb([*[[city] for city in cities], [Buttons.back.categories]])
+        reply_markup = basic_kb([Buttons.menu.dialog] + [*[[city] for city in cities], [Buttons.back.categories]])
         await msg.answer('Упс, такого міста немає в нашому списку закладів, спробуй ще раз',
                          reply_markup=reply_markup)
 
@@ -72,6 +72,12 @@ async def partner_pagination_cmd(msg: Message, partner_db: PartnerRepo, media_db
     elif partner := await partner_db.get_partner_name(msg.text):
         await partner_view_cmd(msg, partner, media_db)
         await state.update_data(partner_id=partner.id)
+        return
+    else:
+        partners = partners[page]
+        await msg.answer('Такого закладу немає, спробуй ще раз.',
+                         reply_markup=basic_kb([[Buttons.menu.dialog]] + chunk_list([partner.name for partner in partners], 2) +
+                        [[Buttons.partners.prev, Buttons.back.categories, Buttons.partners.next]]))
         return
 
     partners = partners[page]

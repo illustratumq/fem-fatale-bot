@@ -44,11 +44,11 @@ async def main():
         AllowedUpdates.MESSAGE + AllowedUpdates.CALLBACK_QUERY + AllowedUpdates.CHAT_JOIN_REQUEST
     )
 
-    # if config.misc.reset_db:
-    #     await setup_excel_data(sqlalchemy_session_pool)
+    if config.misc.reset_db:
+        await setup_excel_data(sqlalchemy_session_pool)
 
     try:
-        # await dp.skip_updates()
+        await dp.skip_updates()
         await dp.start_polling(allowed_updates=allowed_updates, reset_webhook=True)
     finally:
         await storage.close()

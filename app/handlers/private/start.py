@@ -47,7 +47,13 @@ async def introduction_cmd(msg: Message, chat_db: ChatRepo, userbot: UserbotCont
     await msg.answer(text, reply_markup=introduction_kb())
     await AuthSG.Introduction.set()
     if msg.from_user.id not in config.bot.admin_ids:
-        await create_user_dialog(msg, chat_db, userbot)
+        if not await chat_db.get_chat_user(msg.from_user.id):
+            await create_user_dialog(msg, chat_db, userbot)
+            count = await chat_db.count()
+            if count in (100, 200, 300, 400, 450, 480, 490):
+                for admin_id in config.bot.admin_ids:
+                    await msg.bot.send_message(chat_id=admin_id, text=f'🤖 Увага\n\nВ боті використано вже '
+                                                                      f'{count} чатів!')
 
 
 async def help_guide_cmd(msg: Message):

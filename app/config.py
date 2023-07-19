@@ -55,6 +55,7 @@ class Miscellaneous:
     media_channel_id: str
     event_channel_id: str
     reset_db: bool
+    chat_admin_ids: tuple[int]
 
 @dataclass
 class Config:
@@ -94,7 +95,8 @@ class Config:
                 reset_db=env.bool('RESET_DATABASE', False),
                 django_login=env.str('DJANGO_LOGIN', 'admin'),
                 django_password=env.str('DJANGO_PASSWORD', 'Admin!'),
-                server_host_ip=env.str('SERVER_HOST_IP')
+                server_host_ip=env.str('SERVER_HOST_IP'),
+                chat_admin_ids=tuple(map(int, env.list('CHAT_ADMIN_IDS'))),
             ),
             userbot=UserBot(
                 api_id=env.str('USERBOT_API_ID', None),
